@@ -1,0 +1,20 @@
+# Secrets
+.env
+*.env.local
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Flutter / Dart
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins*
+mobile/ios/Pods/
+
+# Éditeurs et système
+.idea/
+.vscode/
+.DS_Store
