@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # Base PostgreSQL identique à celle du poste de dev
+    services:
+      db:
+        image: timescale/timescaledb-ha:pg16
+        env:
+          POSTGRES_DB: sunshare
+          POSTGRES_USER: sunshare
+          POSTGRES_PASSWORD: ci-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sunshare -d sunshare"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      DATABASE_URL: postgresql+psycopg://sunshare:ci-password@127.0.0.1:5432/sunshare
+      PGPASSWORD: ci-password
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Dépendances
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Extensions PostgreSQL
+        run: psql -h 127.0.0.1 -U sunshare -d sunshare -f ../infra/initdb/01-extensions.sql
+
+      - name: Migrations
+        run: alembic upgrade head
+
+      - name: Tests
+        run: pytest -v
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Analyse
+        run: flutter analyze
+
+      - name: Tests
+        run: flutter test
