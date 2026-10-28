@@ -10,14 +10,14 @@ from app.db import SessionLocal
 from app.jobs import run_day
 from app.models import Allocation, DataSource, LoadCurve
 from app.money import to_cents
-from app.simulation import day_steps
+from app.timesteps import HOURS_PER_STEP, day_steps
 from tests.helpers import admin_headers, client, loop_with_members, user_headers
 
 DAY1, DAY2 = date(2026, 10, 20), date(2026, 10, 21)
 
-# Chaque pas est affiché à 3 décimales : la somme de 48 pas arrondis peut s'écarter du total exact
-# d'au plus 48 × 0,0005 kWh (les totaux du mois, eux, sont calculés exactement puis arrondis)
-STEPS_SUM_TOLERANCE = 48 * 0.0005
+# Chaque pas est affiché à 3 décimales : la somme de 96 pas arrondis peut s'écarter du total exact
+# d'au plus 96 × 0,0005 kWh (les totaux du mois, eux, sont calculés exactement puis arrondis)
+STEPS_SUM_TOLERANCE = 96 * 0.0005
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +69,7 @@ def test_courbe_du_jour_d_un_consommateur(loop):
 
     assert day["day"] == "2026-10-20"
     assert day["data_source"] == "simulated"
-    assert len(day["steps"]) == 48
+    assert len(day["steps"]) == 96
     assert all(step["consumption_kw"] > 0 for step in day["steps"])
     assert all(step["production_kw"] is None for step in day["steps"])
     assert all(step["sold_kwh"] == 0 for step in day["steps"])
@@ -105,7 +105,7 @@ def test_jour_sans_donnees(loop):
     day = curves(headers, date(2026, 9, 15))
 
     assert day["data_source"] is None
-    assert len(day["steps"]) == 48
+    assert len(day["steps"]) == 96
     assert all(s["consumption_kw"] is None and s["received_kwh"] == 0 for s in day["steps"])
 
 
@@ -119,7 +119,7 @@ def test_mois_d_un_consommateur(loop):
     with SessionLocal() as db:
         local = allocated(db, consumer=meter, first=DAY1, last=DAY2)
         consumption = db.scalar(
-            select(func.sum(LoadCurve.kw_avg) * Decimal("0.5")).where(LoadCurve.meter_id == meter)
+            select(func.sum(LoadCurve.kw_avg) * HOURS_PER_STEP).where(LoadCurve.meter_id == meter)
         )
 
     assert month["data_source"] == "simulated"

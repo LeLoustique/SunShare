@@ -854,7 +854,7 @@
           "tableau de bord"
         ],
         "summary": "Read My Curves",
-        "description": "Pas de 30 min de la journée : consommation, production et énergie locale de l'utilisateur.",
+        "description": "Pas de 15 min de la journée : consommation, production et énergie locale de l'utilisateur.",
         "operationId": "read_my_curves",
         "security": [
           {
@@ -1430,7 +1430,7 @@
           "sold_kwh"
         ],
         "title": "CurveStep",
-        "description": "Un pas de 30 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure)."
+        "description": "Un pas de 15 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure)."
       },
       "Dashboard": {
         "properties": {

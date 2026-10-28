@@ -26,9 +26,9 @@ from app.models import (
     Meter,
     MeterDirection,
 )
-from app.simulation import STEP, consumption_curve, day_steps, production_curve
+from app.simulation import consumption_curve, production_curve
+from app.timesteps import HOURS_PER_STEP, STEP, day_steps
 
-HOURS_PER_STEP = Decimal("0.5")  # kWh = kW moyen × 0,5 h
 SUPPORTED_MODES = {AllocationMode.dynamic_default, AllocationMode.static}
 
 

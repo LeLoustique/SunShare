@@ -162,9 +162,9 @@ class LoopMember(Base):
 
 
 class LoadCurve(Base):
-    """Courbe de charge : puissance moyenne d'un compteur sur un pas de 30 min.
+    """Courbe de charge : puissance moyenne d'un compteur sur un pas de 15 min.
 
-    Hypertable TimescaleDB (17 520 points par compteur et par an). Données personnelles
+    Hypertable TimescaleDB (35 040 points par compteur et par an). Données personnelles
     sensibles : elles révèlent la présence au domicile.
     """
 
@@ -173,15 +173,15 @@ class LoadCurve(Base):
     meter_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("meters.id", ondelete="CASCADE"), primary_key=True
     )
-    # Début du pas de 30 min, en UTC
+    # Début du pas de 15 min, en UTC
     ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
-    # Puissance moyenne en kW sur le pas (énergie : kWh = kW × 0,5)
+    # Puissance moyenne en kW sur le pas (énergie : kWh = kW × 0,25)
     kw_avg: Mapped[Decimal] = mapped_column(Numeric(8, 3))
     source: Mapped[DataSource] = mapped_column(Enum(DataSource, name="data_source"))
 
 
 class Allocation(Base):
-    """Énergie affectée d'un producteur à un consommateur sur un pas de 30 min (hypertable).
+    """Énergie affectée d'un producteur à un consommateur sur un pas de 15 min (hypertable).
 
     6 décimales : les sommes mensuelles restent exactes, l'arrondi au centime se fait une seule
     fois, sur le montant mensuel.

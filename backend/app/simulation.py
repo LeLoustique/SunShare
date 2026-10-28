@@ -8,27 +8,15 @@ Ordres de grandeur obtenus : ~4 000 kWh/an pour un foyer moyen, ~900 kWh/an par 
 import math
 import random
 import uuid
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
-PARIS = ZoneInfo("Europe/Paris")
-STEP = timedelta(minutes=30)
+from app.timesteps import PARIS, STEP, day_steps
+
 KW_PRECISION = Decimal("0.001")
 
 # Rendement global d'une installation (onduleur, câbles, température, salissures)
 PERFORMANCE_RATIO = 0.85
-
-
-def day_steps(day: date) -> list[datetime]:
-    """Débuts des pas de 30 min d'une journée française, en UTC (46 ou 50 pas aux changements d'heure)."""
-    start = datetime.combine(day, time(), PARIS).astimezone(UTC)
-    end = datetime.combine(day + timedelta(days=1), time(), PARIS).astimezone(UTC)
-    steps = []
-    while start < end:
-        steps.append(start)
-        start += STEP
-    return steps
 
 
 def _sun_height(moment: datetime, latitude: float, longitude: float) -> float:

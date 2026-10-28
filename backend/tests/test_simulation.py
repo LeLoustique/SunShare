@@ -1,12 +1,13 @@
 """Générateur de courbes simulées : fonctions pures."""
 
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
-from app.simulation import consumption_curve, day_steps, production_curve
+from app.simulation import consumption_curve, production_curve
+from app.timesteps import HOURS_PER_STEP, day_steps
 
 METER = uuid.UUID(int=1)
 AMIENS = (49.897, 2.290)
@@ -14,7 +15,7 @@ AMIENS = (49.897, 2.290)
 
 @pytest.mark.parametrize(
     ("day", "steps"),
-    [(date(2026, 10, 24), 48), (date(2026, 10, 25), 50), (date(2026, 3, 29), 46)],
+    [(date(2026, 10, 24), 96), (date(2026, 10, 25), 100), (date(2026, 3, 29), 92)],
 )
 def test_journee_francaise_et_changements_d_heure(day, steps):
     assert len(day_steps(day)) == steps
@@ -66,3 +67,9 @@ def test_courbes_deterministes_avec_trois_decimales():
         METER, day, Decimal(6), *AMIENS
     )
     assert all(kw == kw.quantize(Decimal("0.001")) for _, kw in consumption_curve(METER, day))
+
+
+def test_pas_de_quinze_minutes():
+    steps = day_steps(date(2026, 10, 24))
+    assert steps[1] - steps[0] == timedelta(minutes=15)
+    assert HOURS_PER_STEP == Decimal("0.25")

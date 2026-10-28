@@ -1,7 +1,8 @@
 """Moteur de répartition de l'énergie produite entre les membres d'une boucle (cahier des charges §8.2).
 
-Fonctions pures, sur un pas de 30 min, en kWh et en Decimal. Elles servent à la simulation interne
-(REP-02) : la facturation repose uniquement sur les énergies publiées par Enedis (REP-03).
+Fonctions pures, sur un pas de mesure (15 min), en kWh et en Decimal. Elles servent à la
+simulation interne (REP-02) : la facturation repose uniquement sur les énergies publiées par
+Enedis (REP-03).
 
 Clé dynamique par défaut, au prorata des consommations, avec P la production totale et C_i la
 consommation du consommateur i :

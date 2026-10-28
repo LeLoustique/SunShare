@@ -17,9 +17,8 @@ from app.config import settings
 from app.models import Allocation, DataSource, LoadCurve, Loop, Meter, MeterDirection, User
 from app.money import to_cents
 from app.schemas import ConsumerSummary, CurveStep, Dashboard, DayCurves, ProducerSummary
-from app.simulation import PARIS, STEP, day_steps
+from app.timesteps import HOURS_PER_STEP, PARIS, STEP, day_steps
 
-HOURS_PER_STEP = Decimal("0.5")
 ZERO = Decimal(0)
 
 

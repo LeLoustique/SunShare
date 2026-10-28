@@ -15,7 +15,7 @@ class DashboardRepository {
   Future<Dashboard> month(String period) async =>
       (await _dashboard.readMyDashboard(period: period)).data!;
 
-  /// Pas de 30 min d'une journée française.
+  /// Pas de 15 min d'une journée française.
   Future<DayCurves> day(Date day) async => (await _dashboard.readMyCurves(date: day)).data!;
 }
 

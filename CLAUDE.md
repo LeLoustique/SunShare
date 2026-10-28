@@ -14,8 +14,10 @@ Cahier des charges complet : https://claude.ai/code/artifact/c29d0cf5-0e33-44ba-
 - **Périmètre** : 2 km max entre les **deux sites les plus éloignés** de la boucle (un diamètre, pas un
   rayon autour d'un utilisateur). 10 ou 20 km possibles sur dérogation (zones rurales) → le périmètre est
   un paramètre de la boucle (`perimeter_km`).
-- **L'app ne mesure rien** : les courbes de charge viennent d'Enedis, au pas de 30 minutes, en **J+1**.
-  Traitements en lots (quotidiens / mensuels), jamais en temps réel.
+- **L'app ne mesure rien** : les courbes de charge viennent d'Enedis, au **pas de 15 minutes** (pas de
+  mesure et de répartition de l'ACC, confirmé par Enedis en novembre 2025 ; le cahier des charges
+  initial disait 30 min). Enedis publie à la PMO les énergies réparties de l'opération en **M+1** ;
+  les courbes individuelles peuvent arriver en J+1. Traitements en lots, jamais en temps réel.
 - **C'est Enedis qui répartit l'énergie** à partir des clés envoyées par la PMO (personne morale
   organisatrice). La facturation repose **uniquement sur les données Enedis**, jamais sur notre simulation.
 - **Argent** : `Decimal` en Python, `numeric` en base, jamais de flottant. Arrondi au centime une seule
@@ -62,7 +64,8 @@ SunShare/
 │   │   ├── perimeter.py    # contrôle du périmètre (ST_Distance, marge de 50 m)
 │   │   ├── loop_service.py # statistiques et conversions partagées des boucles
 │   │   ├── allocation.py   # moteur de répartition (fonctions pures, Decimal, couverture ≥ 90 %)
-│   │   ├── simulation.py   # courbes de charge simulées (déterministes, journées françaises)
+│   │   ├── timesteps.py    # pas de mesure (15 min), conversion kW → kWh, journées françaises
+│   │   ├── simulation.py   # courbes de charge simulées (déterministes)
 │   │   ├── jobs.py         # traitement d'une journée : courbes simulées puis répartition
 │   │   ├── dashboard.py    # courbe du jour et chiffres du mois d'un utilisateur
 │   │   ├── money.py        # to_cents : arrondi au centime, une seule fois, sur le total
@@ -168,11 +171,13 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Tarifs (`EurPerKwh`) : `Decimal` en Python, `numeric(6,4)` en base, **chaîne** dans le JSON
   (`"0.1800"`), donc `String` côté Dart. Les grandeurs physiques (kWc, km) sont des nombres JSON.
 - Les membres d'une boucle ne voient que des statistiques agrégées, jamais les autres membres.
-- Courbes et répartitions : hypertables TimescaleDB `load_curves` (kW moyen sur 30 min, 3 décimales)
+- Courbes et répartitions : hypertables TimescaleDB `load_curves` (kW moyen sur 15 min, 3 décimales)
   et `allocations` (kWh par paire producteur → consommateur, 6 décimales, arrondi **vers le bas**
   pour ne jamais affecter plus que produit ou consommé). Colonne `source` : `simulated` ou `enedis` ;
   une courbe Enedis n'est jamais remplacée par une simulée, et seules les données Enedis facturent.
-- Une « journée » va de minuit à minuit heure de Paris (`day_steps`) : 48 pas, 46 ou 50 aux
+- Le pas, la conversion kWh = kW × 0,25 et les journées sont définis **uniquement** dans
+  `app/timesteps.py` ; ne jamais coder 15 min, 0,25 ou 96 ailleurs (l'app mobile lit la durée du pas
+  dans les horodatages). Une « journée » va de minuit à minuit heure de Paris : 96 pas, 92 ou 100 aux
   changements d'heure. Ne participent que les membres actifs dont la date d'entrée est passée.
 - Clés de répartition prises en charge : `dynamic_default` (§8.2) et `static` (k_i × P plafonné à
   C_i) ; `dynamic_custom` lève `NotImplementedError` et la boucle est ignorée par le traitement.
@@ -219,9 +224,9 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 
 **Sprint 3** : courbes simulées et moteur de répartition (REP-01, REP-02, DASH-01/02).
 - [x] Backend : hypertables `load_curves` / `allocations`, moteur de répartition (100 % couvert),
-      générateur de courbes, traitement par jour (`scripts/simulate.py`) ; mesuré : 0,34 s par jour
-      pour une boucle de 50 compteurs
-- [x] API : `/me/curves?date=` (pas de 30 min : production, consommation, énergie reçue / vendue)
+      générateur de courbes, traitement par jour (`scripts/simulate.py`) ; mesuré au pas de 15 min :
+      0,78 s par jour pour une boucle de 50 compteurs
+- [x] API : `/me/curves?date=` (pas de 15 min : production, consommation, énergie reçue / vendue)
       et `/me/dashboard?period=` (kWh, montant estimé, commission, CO2 évité, taux) + tests
 - [x] Mobile : onglet « Tableau de bord » (accueil) : mois (énergie locale, taux, montant estimé,
       revenu net, CO2) et journée (courbe fl_chart consommation / production / énergie locale)
@@ -229,6 +234,14 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 **Sprint 3 — terminé.**
 - Plus tard : planification automatique (APScheduler, worker séparé) avec la collecte Enedis.
 
-**Sprints suivants** : intégration Enedis (sandbox Data Connect) → facturation et paiements → pilote.
+**Sprint 4 — en cours** : intégration Enedis. Décisions du 28/10/2026 :
+- [x] Passage au pas de 15 min (code, données simulées supprimées par migration, cahier des charges)
+- [ ] Canal prioritaire : **API PMO** de l'opération (courbes et énergies réparties de tous les
+      participants, M+1, seule base de facturation), derrière une interface avec un faux Enedis
+      pour les tests ; aucun accès Enedis pour l'instant (ni DataHub, ni convention PMO)
+- Plus tard : Data Connect (consentement de chaque participant, courbes en J+1), en transition vers
+  « Data Connect 2026 » ; planification nocturne (worker).
+
+**Sprints suivants** : facturation et paiements → pilote.
 
 **Plus tard** : vérification de l'e-mail, révocation des jetons.

@@ -18,7 +18,7 @@ Method | HTTP request | Description
 
 Read My Curves
 
-Pas de 30 min de la journée : consommation, production et énergie locale de l'utilisateur.
+Pas de 15 min de la journée : consommation, production et énergie locale de l'utilisateur.
 
 ### Example
 ```dart

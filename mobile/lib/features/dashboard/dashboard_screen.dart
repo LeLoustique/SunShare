@@ -318,10 +318,19 @@ class _DayChart extends StatelessWidget {
     final hasConsumption = steps.any((s) => s.consumptionKw != null);
     final hasProduction = steps.any((s) => s.productionKw != null);
 
+    // Durée d'un pas lue dans les données (15 min chez Enedis) plutôt que codée en dur
+    final stepHours = steps.length > 1
+        ? steps[1].ts.difference(steps[0].ts).inMinutes / 60
+        : 0.25;
+    double hoursSinceMidnight(CurveStep step) =>
+        step.ts.difference(steps.first.ts).inMinutes / 60;
+
     // Abscisse : heures depuis minuit (0 → 24, ou 23 / 25 aux changements d'heure)
     List<FlSpot> spots(num? Function(CurveStep) value) => [
-          for (final (i, step) in steps.indexed)
-            value(step) == null ? FlSpot.nullSpot : FlSpot(i / 2, value(step)!.toDouble()),
+          for (final step in steps)
+            value(step) == null
+                ? FlSpot.nullSpot
+                : FlSpot(hoursSinceMidnight(step), value(step)!.toDouble()),
         ];
     LineChartBarData line(List<FlSpot> data, Color color, {bool filled = false}) => LineChartBarData(
           spots: data,
@@ -332,10 +341,10 @@ class _DayChart extends StatelessWidget {
           belowBarData: BarAreaData(show: filled, color: color.withValues(alpha: 0.35)),
         );
 
-    // Énergie locale du pas convertie en puissance moyenne (kWh / 0,5 h) pour la même échelle
-    final local = spots((s) => (s.receivedKwh + s.soldKwh) * 2);
-    final consumption = steps.fold<num>(0, (sum, s) => sum + (s.consumptionKw ?? 0) / 2);
-    final production = steps.fold<num>(0, (sum, s) => sum + (s.productionKw ?? 0) / 2);
+    // Énergie locale du pas convertie en puissance moyenne (kWh / durée du pas) pour la même échelle
+    final local = spots((s) => (s.receivedKwh + s.soldKwh) / stepHours);
+    final consumption = steps.fold<num>(0, (sum, s) => sum + (s.consumptionKw ?? 0) * stepHours);
+    final production = steps.fold<num>(0, (sum, s) => sum + (s.productionKw ?? 0) * stepHours);
     final received = steps.fold<num>(0, (sum, s) => sum + s.receivedKwh);
     final sold = steps.fold<num>(0, (sum, s) => sum + s.soldKwh);
 
@@ -350,7 +359,7 @@ class _DayChart extends StatelessWidget {
               child: LineChart(
                 LineChartData(
                   minX: 0,
-                  maxX: steps.length / 2,
+                  maxX: steps.length * stepHours,
                   minY: 0,
                   lineTouchData: const LineTouchData(enabled: false),
                   gridData: const FlGridData(drawVerticalLine: false),

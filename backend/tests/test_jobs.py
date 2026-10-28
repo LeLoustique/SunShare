@@ -13,7 +13,7 @@ from sqlalchemy import select, text, update
 from app.db import SessionLocal
 from app.jobs import allocate_day, run_day
 from app.models import Allocation, DataSource, LoadCurve, Loop, LoopMember
-from app.simulation import day_steps
+from app.timesteps import HOURS_PER_STEP, day_steps
 from tests.helpers import admin_headers, loop_with_members
 
 DAY = date(2026, 10, 20)
@@ -55,11 +55,11 @@ def test_journee_simulee_et_repartie(admin):
         rows = allocations(db, loop_id)
 
     assert report.loops >= 1
-    assert len(points) == 3 * 48
+    assert len(points) == 3 * 96
     assert {source for *_, source in points} == {DataSource.simulated}
     assert rows, "un jour d'octobre, des panneaux de 9 kWc produisent"
 
-    kwh = {(meter, ts): kw * Decimal("0.5") for meter, ts, kw, _ in points}
+    kwh = {(meter, ts): kw * HOURS_PER_STEP for meter, ts, kw, _ in points}
     received, sold = defaultdict(Decimal), defaultdict(Decimal)
     for row in rows:
         assert row.producer_meter_id == producer and row.consumer_meter_id in consumers
@@ -83,7 +83,7 @@ def test_rejouer_une_journee_ne_duplique_rien(admin):
         first = len(allocations(db, loop_id))
         run_day(db, DAY)
         assert len(allocations(db, loop_id)) == first
-        assert len(curves(db, meters)) == 2 * 48
+        assert len(curves(db, meters)) == 2 * 96
 
 
 def test_seuls_les_membres_entres_sont_simules(admin):
@@ -93,7 +93,7 @@ def test_seuls_les_membres_entres_sont_simules(admin):
 
     with SessionLocal() as db:
         run_day(db, DAY)
-        assert len(curves(db, entered)) == 48
+        assert len(curves(db, entered)) == 96
         assert curves(db, later) == []
         assert curves(db, pending) == []
 
@@ -116,7 +116,7 @@ def test_changement_d_heure(admin):
 
     with SessionLocal() as db:
         run_day(db, day)
-        assert len(curves(db, meters, day)) == 50
+        assert len(curves(db, meters, day)) == 100
 
 
 def test_cle_statique(admin):

@@ -8,7 +8,7 @@ import 'package:built_value/serializer.dart';
 
 part 'curve_step.g.dart';
 
-/// Un pas de 30 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure).
+/// Un pas de 15 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure).
 ///
 /// Properties:
 /// * [ts]

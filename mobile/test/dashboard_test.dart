@@ -32,16 +32,17 @@ final producerFigures = ProducerSummary((b) => b
   ..commissionEur = '2.85'
   ..netEur = '22.80');
 
-/// Journée d'un consommateur : 1 kW toute la journée, dont 0,25 kWh local par pas l'après-midi.
+/// Journée d'un consommateur au pas de 15 min : 1 kW toute la journée (24 kWh), dont 0,125 kWh
+/// local par pas de 12 h à 16 h (16 pas, 2 kWh).
 DayCurves consumerDay() => DayCurves((b) => b
   ..day = latest
   ..dataSource = DataSource.simulated
   ..steps.addAll([
-    for (var i = 0; i < 48; i++)
+    for (var i = 0; i < 96; i++)
       CurveStep((s) => s
-        ..ts = DateTime.utc(2026, 10, 26, 23).add(Duration(minutes: 30 * i))
+        ..ts = DateTime.utc(2026, 10, 26, 23).add(Duration(minutes: 15 * i))
         ..consumptionKw = 1
-        ..receivedKwh = i >= 24 && i < 32 ? 0.25 : 0
+        ..receivedKwh = i >= 48 && i < 64 ? 0.125 : 0
         ..soldKwh = 0),
   ]));
 

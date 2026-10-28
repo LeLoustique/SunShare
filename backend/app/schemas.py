@@ -238,7 +238,7 @@ EurAmount = Annotated[
 
 
 class CurveStep(BaseModel):
-    """Un pas de 30 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure)."""
+    """Un pas de 15 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure)."""
 
     ts: datetime
     consumption_kw: float | None

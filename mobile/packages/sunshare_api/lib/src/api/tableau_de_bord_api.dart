@@ -22,7 +22,7 @@ class TableauDeBordApi {
   const TableauDeBordApi(this._dio, this._serializers);
 
   /// Read My Curves
-  /// Pas de 30 min de la journée : consommation, production et énergie locale de l&#39;utilisateur.
+  /// Pas de 15 min de la journée : consommation, production et énergie locale de l&#39;utilisateur.
   ///
   /// Parameters:
   /// * [date] - Journée française (défaut : hier)

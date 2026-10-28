@@ -18,7 +18,7 @@ def read_my_curves(
         date | None, Query(alias="date", description="Journée française (défaut : hier)")
     ] = None,
 ) -> DayCurves:
-    """Pas de 30 min de la journée : consommation, production et énergie locale de l'utilisateur."""
+    """Pas de 15 min de la journée : consommation, production et énergie locale de l'utilisateur."""
     return dashboard.day_curves(db, user, day or dashboard.yesterday())
 
 
