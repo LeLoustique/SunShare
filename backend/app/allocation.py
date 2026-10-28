@@ -99,3 +99,19 @@ def sold_by_producer(pairs: Pairs) -> dict[Hashable, Decimal]:
     for (producer, _), kwh in pairs.items():
         totals[producer] = totals.get(producer, ZERO) + kwh
     return totals
+
+
+def pairs_from_totals(
+    sold: Mapping[Hashable, Decimal], received: Mapping[Hashable, Decimal]
+) -> Pairs:
+    """Paires producteur → consommateur reconstituées à partir de totaux publiés par Enedis.
+
+    Pour un pas où l'on connaît l'énergie vendue par chaque producteur (V_j) et reçue par chaque
+    consommateur (E_i), avec Σ V_j = Σ E_i : e_ij = E_i × V_j / Σ V. Arrondi vers le bas comme
+    ailleurs ; utile si Enedis ne publie pas les énergies par paire.
+    """
+    _check(sold, "énergie vendue")
+    _check(received, "énergie reçue")
+    if sum(sold.values(), ZERO) <= 0:
+        return {}
+    return _split(sold, received)

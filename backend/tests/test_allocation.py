@@ -8,6 +8,7 @@ import pytest
 from app.allocation import (
     KWH_PRECISION,
     dynamic_default,
+    pairs_from_totals,
     received_by_consumer,
     sold_by_producer,
     static,
@@ -70,7 +71,7 @@ def test_valeur_negative_refusee():
 
 
 def test_invariants_sur_des_pas_aleatoires():
-    """Jamais plus que la consommation de chacun, la production de chacun, ni le total disponible."""
+    """Jamais plus que la consommation ni la production de chacun, ni que le total disponible."""
     rng = random.Random(42)
     for _ in range(500):
         production = {f"p{j}": D(rng.randint(0, 5000)) / 1000 for j in range(rng.randint(1, 4))}
@@ -113,3 +114,22 @@ def test_cle_statique_invalide():
 
 def test_cle_statique_sans_production():
     assert static({"p": D(0)}, {"a": D(1)}, {"a": D(1)}) == {}
+
+
+def test_paires_reconstituees_depuis_les_totaux_enedis():
+    pairs = pairs_from_totals({"p1": D(3), "p2": D(1)}, {"a": D(2), "b": D(2)})
+
+    assert pairs == {
+        ("p1", "a"): D("1.5"),
+        ("p2", "a"): D("0.5"),
+        ("p1", "b"): D("1.5"),
+        ("p2", "b"): D("0.5"),
+    }
+    assert sold_by_producer(pairs) == {"p1": D(3), "p2": D(1)}
+    assert received_by_consumer(pairs) == {"a": D(2), "b": D(2)}
+
+
+def test_paires_sans_vente():
+    assert pairs_from_totals({"p": D(0)}, {"a": D(1)}) == {}
+    with pytest.raises(ValueError, match="vendue"):
+        pairs_from_totals({"p": D(-1)}, {"a": D(1)})

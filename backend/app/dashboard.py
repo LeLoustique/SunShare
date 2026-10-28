@@ -17,7 +17,7 @@ from app.config import settings
 from app.models import Allocation, DataSource, LoadCurve, Loop, Meter, MeterDirection, User
 from app.money import to_cents
 from app.schemas import ConsumerSummary, CurveStep, Dashboard, DayCurves, ProducerSummary
-from app.timesteps import HOURS_PER_STEP, PARIS, STEP, day_steps
+from app.timesteps import HOURS_PER_STEP, PARIS, bounds, day_steps, month_days
 
 ZERO = Decimal(0)
 
@@ -29,11 +29,6 @@ def yesterday() -> date:
 
 def current_month() -> str:
     return datetime.now(PARIS).strftime("%Y-%m")
-
-
-def _bounds(first: date, last: date) -> tuple[datetime, datetime]:
-    """Instants UTC couvrant les journées françaises de `first` à `last` incluses."""
-    return day_steps(first)[0], day_steps(last)[-1] + STEP
 
 
 def _number(value: Decimal) -> float:
@@ -85,7 +80,7 @@ def _source(sources: set[DataSource]) -> DataSource | None:
 def day_curves(db: Session, user: User, day: date) -> DayCurves:
     meters = _my_meters(db, user)
     steps = day_steps(day)
-    start, end = _bounds(day, day)
+    start, end = bounds(day, day)
 
     power: dict[MeterDirection, dict[datetime, Decimal]] = defaultdict(dict)
     curve_sources = set()
@@ -124,9 +119,7 @@ def day_curves(db: Session, user: User, day: date) -> DayCurves:
 
 
 def month_dashboard(db: Session, user: User, period: str) -> Dashboard:
-    first = date.fromisoformat(f"{period}-01")
-    last = (first.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
-    start, end = _bounds(first, last)
+    start, end = bounds(*month_days(period))
     meters = _my_meters(db, user)
 
     energy = {MeterDirection.consumption: ZERO, MeterDirection.production: ZERO}

@@ -27,3 +27,15 @@ def day_steps(day: date) -> list[datetime]:
         steps.append(start)
         start += STEP
     return steps
+
+
+def bounds(first: date, last: date) -> tuple[datetime, datetime]:
+    """Instants UTC [début, fin[ couvrant les journées françaises de `first` à `last` incluses."""
+    return day_steps(first)[0], day_steps(last)[-1] + STEP
+
+
+def month_days(period: str) -> tuple[date, date]:
+    """Premier et dernier jour d'un mois « AAAA-MM »."""
+    first = date.fromisoformat(f"{period}-01")
+    following = (first.replace(day=28) + timedelta(days=4)).replace(day=1)
+    return first, following - timedelta(days=1)

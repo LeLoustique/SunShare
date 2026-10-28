@@ -69,11 +69,12 @@ SunShare/
 │   │   ├── jobs.py         # traitement d'une journée : courbes simulées puis répartition
 │   │   ├── dashboard.py    # courbe du jour et chiffres du mois d'un utilisateur
 │   │   ├── money.py        # to_cents : arrondi au centime, une seule fois, sur le total
+│   │   ├── enedis/         # client.py (interface du connecteur PMO), importer.py (import mensuel)
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
 │   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin, dashboard (/me/curves, /me/dashboard)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
-│   ├── scripts/            # export_openapi.py, promote_admin.py, simulate.py
+│   ├── scripts/            # export_openapi.py, promote_admin.py, simulate.py, import_enedis.py
 │   └── tests/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
     ├── lib/
@@ -102,6 +103,7 @@ alembic revision --autogenerate -m "..."  # nouvelle migration : TOUJOURS relire
 alembic upgrade head
 python scripts/promote_admin.py e-mail  # donne le rôle admin (PMO) : il ne se choisit pas à l'inscription
 python scripts/simulate.py --du 2026-10-01 --au 2026-10-27   # courbes simulées + répartition (défaut : hier)
+python scripts/import_enedis.py --mois 2026-10   # import Enedis (refuse tant qu'aucun accès n'est configuré)
 
 # Client Dart : à relancer après toute modification d'une route ou d'un schéma Pydantic
 ./scripts/gen_client.sh                 # (Docker requis) ; la CI échoue si openapi.json est périmé
@@ -182,6 +184,14 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Clés de répartition prises en charge : `dynamic_default` (§8.2) et `static` (k_i × P plafonné à
   C_i) ; `dynamic_custom` lève `NotImplementedError` et la boucle est ignorée par le traitement.
 - `tzdata` est requis (Windows n'a pas de base de fuseaux horaires pour `zoneinfo`).
+- Enedis : tout passe par `EnedisOperationClient` (app/enedis/client.py), en termes métier (PRM + sens,
+  kW par pas, kWh affectés par paire) ; **aucun format d'échange inventé** : le client réel s'écrira avec
+  la documentation de la convention PMO. Jamais de faux client Enedis hors des tests : des données
+  `enedis` simulées seraient facturées. `get_enedis_client()` lève `EnedisNotConfigured` en attendant.
+- Import (`import_month`) : tout est récupéré avant d'écrire (3 tentatives, attente croissante),
+  rejouable sans doublon, données `enedis` prioritaires sur la simulation ; ce qui ne se rattache pas
+  à un membre actif ou sorti (PRM inconnu, sens inversé, pas mal aligné, hors période, valeur
+  négative, doublon) est signalé dans `ImportReport.anomalies`, jamais importé.
 - Montants (`EurAmount`) : calculés en Decimal sur les kWh exacts, arrondis par `to_cents` une seule
   fois sur le total mensuel, chaîne dans le JSON (`"25.65"`). Test de référence : l'exemple §8.3 du
   cahier des charges (142,5 kWh → 25,65 € / 2,85 € / 22,80 €, 7,4 kg de CO2).
@@ -236,9 +246,12 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 
 **Sprint 4 — en cours** : intégration Enedis. Décisions du 28/10/2026 :
 - [x] Passage au pas de 15 min (code, données simulées supprimées par migration, cahier des charges)
-- [ ] Canal prioritaire : **API PMO** de l'opération (courbes et énergies réparties de tous les
-      participants, M+1, seule base de facturation), derrière une interface avec un faux Enedis
-      pour les tests ; aucun accès Enedis pour l'instant (ni DataHub, ni convention PMO)
+- [x] Canal prioritaire : **API PMO** de l'opération (courbes et énergies réparties de tous les
+      participants, M+1, seule base de facturation) : interface, import mensuel avec anomalies et
+      nouvelles tentatives, `scripts/import_enedis.py`, tests avec un faux client
+- [ ] Client réel de l'API PMO : bloqué tant qu'il n'y a pas de convention PMO ni de documentation
+      (aucun accès Enedis pour l'instant)
+- [ ] Back-office : anomalies d'import et lancement de l'import par l'administrateur
 - Plus tard : Data Connect (consentement de chaque participant, courbes en J+1), en transition vers
   « Data Connect 2026 » ; planification nocturne (worker).
 
