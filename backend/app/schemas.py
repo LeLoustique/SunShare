@@ -14,7 +14,14 @@ from pydantic import (
     model_validator,
 )
 
-from app.models import AllocationMode, LoopStatus, MembershipStatus, MeterDirection, UserRole
+from app.models import (
+    AllocationMode,
+    DataSource,
+    LoopStatus,
+    MembershipStatus,
+    MeterDirection,
+    UserRole,
+)
 
 
 class UserCreate(BaseModel):
@@ -220,3 +227,58 @@ class ApproveRequest(BaseModel):
     """Date d'entrée dans l'opération, communiquée à Enedis."""
 
     joined_at: date
+
+
+# Montant en euros arrondi au centime : chaîne exacte dans le JSON (« 25.65 »), jamais un flottant
+EurAmount = Annotated[
+    Decimal,
+    PlainSerializer(str, return_type=str, when_used="json"),
+    WithJsonSchema({"type": "string", "pattern": r"^-?[0-9]+\.[0-9]{2}$", "examples": ["25.65"]}),
+]
+
+
+class CurveStep(BaseModel):
+    """Un pas de 30 min. Puissances en kW (null : pas de compteur de ce sens ou pas de mesure)."""
+
+    ts: datetime
+    consumption_kw: float | None
+    production_kw: float | None
+    # Énergie locale reçue de la boucle (consommation) et vendue à la boucle (production)
+    received_kwh: float
+    sold_kwh: float
+
+
+class DayCurves(BaseModel):
+    day: date
+    # simulated : estimation interne ; enedis : énergies officielles ; null : aucune donnée
+    data_source: DataSource | None
+    steps: list[CurveStep]
+
+
+class ConsumerSummary(BaseModel):
+    consumption_kwh: float
+    local_kwh: float
+    # Part de la consommation couverte par l'énergie locale
+    self_consumption_rate: float | None
+    amount_eur: EurAmount
+
+
+class ProducerSummary(BaseModel):
+    production_kwh: float
+    sold_kwh: float
+    # Part de la production vendue dans la boucle (le reste part sur le réseau)
+    local_share: float | None
+    commission_eur: EurAmount
+    # Reversé au producteur : kWh vendus × (tarif − commission)
+    net_eur: EurAmount
+
+
+class Dashboard(BaseModel):
+    period: str
+    data_source: DataSource | None
+    # Dernier jour (heure de Paris) pour lequel des mesures sont disponibles
+    data_complete_until: date | None
+    consumer: ConsumerSummary | None
+    producer: ProducerSummary | None
+    co2_avoided_kg: float
+    co2_kg_per_kwh: float

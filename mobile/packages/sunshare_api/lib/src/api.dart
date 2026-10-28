@@ -15,6 +15,7 @@ import 'package:sunshare_api/src/api/auth_api.dart';
 import 'package:sunshare_api/src/api/boucles_api.dart';
 import 'package:sunshare_api/src/api/compteurs_api.dart';
 import 'package:sunshare_api/src/api/profil_api.dart';
+import 'package:sunshare_api/src/api/tableau_de_bord_api.dart';
 import 'package:sunshare_api/src/api/technique_api.dart';
 
 class SunshareApi {
@@ -110,6 +111,12 @@ class SunshareApi {
   /// by doing that all interceptors will not be executed
   ProfilApi getProfilApi() {
     return ProfilApi(dio, serializers);
+  }
+
+  /// Get TableauDeBordApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  TableauDeBordApi getTableauDeBordApi() {
+    return TableauDeBordApi(dio, serializers);
   }
 
   /// Get TechniqueApi instance, base route and serializer can be overridden by a given but be careful,

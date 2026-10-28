@@ -3,7 +3,6 @@
 La base est partagée par les tests : chaque test crée sa boucle et ne vérifie que ses compteurs.
 """
 
-import uuid
 from collections import defaultdict
 from datetime import date
 from decimal import Decimal
@@ -15,7 +14,7 @@ from app.db import SessionLocal
 from app.jobs import allocate_day, run_day
 from app.models import Allocation, DataSource, LoadCurve, Loop, LoopMember
 from app.simulation import day_steps
-from tests.helpers import admin_headers, client, new_prm, site, user_headers
+from tests.helpers import admin_headers, loop_with_members
 
 DAY = date(2026, 10, 20)
 
@@ -27,26 +26,8 @@ def admin():
 
 def create_loop(admin, members, joined_at="2026-10-01", **loop_fields):
     """Boucle dont les membres (sens, km à l'est) sont validés à `joined_at` ; renvoie id et compteurs."""
-    data = {"name": "Boucle simulée", "price_eur_kwh": "0.18", "commission_eur_kwh": "0.02"}
-    loop = client.post("/api/v1/admin/loops", json=data | loop_fields, headers=admin).json()
-    meters = []
-    for direction, km in members:
-        headers = user_headers("mixed")
-        meter = {"prm": new_prm(), "direction": direction, "address": site(km).label}
-        if direction == "production":
-            meter["peak_kw"] = 9
-        meter_id = client.post("/api/v1/meters", json=meter, headers=headers).json()["id"]
-        member = client.post(
-            f"/api/v1/loops/{loop['id']}/join", json={"meter_id": meter_id}, headers=headers
-        ).json()
-        if joined_at:
-            client.post(
-                f"/api/v1/admin/loops/{loop['id']}/members/{member['id']}/approve",
-                json={"joined_at": joined_at},
-                headers=admin,
-            )
-        meters.append(uuid.UUID(meter_id))
-    return uuid.UUID(loop["id"]), meters
+    loop_id, joined = loop_with_members(admin, members, joined_at, **loop_fields)
+    return loop_id, [meter for _, meter in joined]
 
 
 def curves(db, meter_ids, day=DAY):

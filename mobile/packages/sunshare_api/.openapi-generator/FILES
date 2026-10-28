@@ -13,6 +13,11 @@ doc/AuthApi.md
 doc/AvailableLoop.md
 doc/BouclesApi.md
 doc/CompteursApi.md
+doc/ConsumerSummary.md
+doc/CurveStep.md
+doc/Dashboard.md
+doc/DataSource.md
+doc/DayCurves.md
 doc/HTTPValidationError.md
 doc/HealthOut.md
 doc/JoinRequest.md
@@ -26,8 +31,10 @@ doc/MembershipStatus.md
 doc/MeterCreate.md
 doc/MeterDirection.md
 doc/MeterOut.md
+doc/ProducerSummary.md
 doc/ProfilApi.md
 doc/RefreshRequest.md
+doc/TableauDeBordApi.md
 doc/TechniqueApi.md
 doc/TokenPair.md
 doc/UserCreate.md
@@ -42,6 +49,7 @@ lib/src/api/auth_api.dart
 lib/src/api/boucles_api.dart
 lib/src/api/compteurs_api.dart
 lib/src/api/profil_api.dart
+lib/src/api/tableau_de_bord_api.dart
 lib/src/api/technique_api.dart
 lib/src/api_util.dart
 lib/src/auth/api_key_auth.dart
@@ -56,7 +64,12 @@ lib/src/model/admin_member_out.dart
 lib/src/model/allocation_mode.dart
 lib/src/model/approve_request.dart
 lib/src/model/available_loop.dart
+lib/src/model/consumer_summary.dart
+lib/src/model/curve_step.dart
+lib/src/model/dashboard.dart
+lib/src/model/data_source.dart
 lib/src/model/date.dart
+lib/src/model/day_curves.dart
 lib/src/model/health_out.dart
 lib/src/model/http_validation_error.dart
 lib/src/model/join_request.dart
@@ -70,6 +83,7 @@ lib/src/model/membership_status.dart
 lib/src/model/meter_create.dart
 lib/src/model/meter_direction.dart
 lib/src/model/meter_out.dart
+lib/src/model/producer_summary.dart
 lib/src/model/refresh_request.dart
 lib/src/model/token_pair.dart
 lib/src/model/user_create.dart
@@ -91,6 +105,11 @@ test/auth_api_test.dart
 test/available_loop_test.dart
 test/boucles_api_test.dart
 test/compteurs_api_test.dart
+test/consumer_summary_test.dart
+test/curve_step_test.dart
+test/dashboard_test.dart
+test/data_source_test.dart
+test/day_curves_test.dart
 test/health_out_test.dart
 test/http_validation_error_test.dart
 test/join_request_test.dart
@@ -104,8 +123,10 @@ test/membership_status_test.dart
 test/meter_create_test.dart
 test/meter_direction_test.dart
 test/meter_out_test.dart
+test/producer_summary_test.dart
 test/profil_api_test.dart
 test/refresh_request_test.dart
+test/tableau_de_bord_api_test.dart
 test/technique_api_test.dart
 test/token_pair_test.dart
 test/user_create_test.dart

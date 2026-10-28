@@ -64,10 +64,15 @@ def test_database():
     _recreate_test_database()
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def fake_geocoder():
-    """Aucun test de l'API n'appelle la vraie Base Adresse Nationale."""
-    FakeGeocoder.available = True
+    """Aucun test de l'API n'appelle la vraie Base Adresse Nationale, fixtures de module comprises."""
     app.dependency_overrides[get_geocoder] = FakeGeocoder
     yield
     app.dependency_overrides.pop(get_geocoder)
+
+
+@pytest.fixture(autouse=True)
+def geocoder_available():
+    """Chaque test repart d'un service d'adresses disponible (certains simulent une panne)."""
+    FakeGeocoder.available = True

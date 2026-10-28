@@ -93,3 +93,31 @@ def admin_headers() -> dict[str, str]:
         db.scalar(select(User).where(User.email == email)).role = UserRole.admin
         db.commit()
     return headers_for(email)
+
+
+def loop_with_members(admin, members, joined_at="2026-10-01", **loop_fields):
+    """Crée une boucle et y fait entrer un nouvel utilisateur par membre (sens, km à l'est).
+
+    Les adhésions sont validées à `joined_at` (None : laissées en attente). Renvoie l'id de la
+    boucle et, pour chaque membre, ses en-têtes d'authentification et l'id de son compteur.
+    """
+    data = {"name": "Boucle simulée", "price_eur_kwh": "0.18", "commission_eur_kwh": "0.02"}
+    loop = client.post("/api/v1/admin/loops", json=data | loop_fields, headers=admin).json()
+    joined = []
+    for direction, km in members:
+        headers = user_headers("mixed")
+        meter = {"prm": new_prm(), "direction": direction, "address": site(km).label}
+        if direction == "production":
+            meter["peak_kw"] = 9
+        meter_id = client.post("/api/v1/meters", json=meter, headers=headers).json()["id"]
+        member = client.post(
+            f"/api/v1/loops/{loop['id']}/join", json={"meter_id": meter_id}, headers=headers
+        ).json()
+        if joined_at:
+            client.post(
+                f"/api/v1/admin/loops/{loop['id']}/members/{member['id']}/approve",
+                json={"joined_at": joined_at},
+                headers=admin,
+            )
+        joined.append((headers, uuid.UUID(meter_id)))
+    return uuid.UUID(loop["id"]), joined

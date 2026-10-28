@@ -20,6 +20,11 @@ import 'package:sunshare_api/src/model/admin_member_out.dart';
 import 'package:sunshare_api/src/model/allocation_mode.dart';
 import 'package:sunshare_api/src/model/approve_request.dart';
 import 'package:sunshare_api/src/model/available_loop.dart';
+import 'package:sunshare_api/src/model/consumer_summary.dart';
+import 'package:sunshare_api/src/model/curve_step.dart';
+import 'package:sunshare_api/src/model/dashboard.dart';
+import 'package:sunshare_api/src/model/data_source.dart';
+import 'package:sunshare_api/src/model/day_curves.dart';
 import 'package:sunshare_api/src/model/http_validation_error.dart';
 import 'package:sunshare_api/src/model/health_out.dart';
 import 'package:sunshare_api/src/model/join_request.dart';
@@ -33,6 +38,7 @@ import 'package:sunshare_api/src/model/membership_status.dart';
 import 'package:sunshare_api/src/model/meter_create.dart';
 import 'package:sunshare_api/src/model/meter_direction.dart';
 import 'package:sunshare_api/src/model/meter_out.dart';
+import 'package:sunshare_api/src/model/producer_summary.dart';
 import 'package:sunshare_api/src/model/refresh_request.dart';
 import 'package:sunshare_api/src/model/token_pair.dart';
 import 'package:sunshare_api/src/model/user_create.dart';
@@ -50,6 +56,11 @@ part 'serializers.g.dart';
   AllocationMode,
   ApproveRequest,
   AvailableLoop,
+  ConsumerSummary,
+  CurveStep,
+  Dashboard,
+  DataSource,
+  DayCurves,
   HTTPValidationError,
   HealthOut,
   JoinRequest,
@@ -63,6 +74,7 @@ part 'serializers.g.dart';
   MeterCreate,
   MeterDirection,
   MeterOut,
+  ProducerSummary,
   RefreshRequest,
   TokenPair,
   UserCreate,

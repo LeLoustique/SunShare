@@ -86,6 +86,8 @@ Class | Method | HTTP request | Description
 [*CompteursApi*](doc/CompteursApi.md) | [**deleteMeter**](doc/CompteursApi.md#deletemeter) | **DELETE** /api/v1/meters/{meter_id} | Delete Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**listMeters**](doc/CompteursApi.md#listmeters) | **GET** /api/v1/meters | List Meters
 [*ProfilApi*](doc/ProfilApi.md) | [**readMe**](doc/ProfilApi.md#readme) | **GET** /api/v1/me | Read Me
+[*TableauDeBordApi*](doc/TableauDeBordApi.md) | [**readMyCurves**](doc/TableauDeBordApi.md#readmycurves) | **GET** /api/v1/me/curves | Read My Curves
+[*TableauDeBordApi*](doc/TableauDeBordApi.md) | [**readMyDashboard**](doc/TableauDeBordApi.md#readmydashboard) | **GET** /api/v1/me/dashboard | Read My Dashboard
 [*TechniqueApi*](doc/TechniqueApi.md) | [**health**](doc/TechniqueApi.md#health) | **GET** /health | Health
 
 
@@ -97,6 +99,11 @@ Class | Method | HTTP request | Description
  - [AllocationMode](doc/AllocationMode.md)
  - [ApproveRequest](doc/ApproveRequest.md)
  - [AvailableLoop](doc/AvailableLoop.md)
+ - [ConsumerSummary](doc/ConsumerSummary.md)
+ - [CurveStep](doc/CurveStep.md)
+ - [Dashboard](doc/Dashboard.md)
+ - [DataSource](doc/DataSource.md)
+ - [DayCurves](doc/DayCurves.md)
  - [HTTPValidationError](doc/HTTPValidationError.md)
  - [HealthOut](doc/HealthOut.md)
  - [JoinRequest](doc/JoinRequest.md)
@@ -110,6 +117,7 @@ Class | Method | HTTP request | Description
  - [MeterCreate](doc/MeterCreate.md)
  - [MeterDirection](doc/MeterDirection.md)
  - [MeterOut](doc/MeterOut.md)
+ - [ProducerSummary](doc/ProducerSummary.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [TokenPair](doc/TokenPair.md)
  - [UserCreate](doc/UserCreate.md)

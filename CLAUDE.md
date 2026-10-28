@@ -64,9 +64,11 @@ SunShare/
 │   │   ├── allocation.py   # moteur de répartition (fonctions pures, Decimal, couverture ≥ 90 %)
 │   │   ├── simulation.py   # courbes de charge simulées (déterministes, journées françaises)
 │   │   ├── jobs.py         # traitement d'une journée : courbes simulées puis répartition
+│   │   ├── dashboard.py    # courbe du jour et chiffres du mois d'un utilisateur
+│   │   ├── money.py        # to_cents : arrondi au centime, une seule fois, sur le total
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
-│   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin (/admin/loops)
+│   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin, dashboard (/me/curves, /me/dashboard)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
 │   ├── scripts/            # export_openapi.py, promote_admin.py, simulate.py
 │   └── tests/
@@ -173,6 +175,12 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Clés de répartition prises en charge : `dynamic_default` (§8.2) et `static` (k_i × P plafonné à
   C_i) ; `dynamic_custom` lève `NotImplementedError` et la boucle est ignorée par le traitement.
 - `tzdata` est requis (Windows n'a pas de base de fuseaux horaires pour `zoneinfo`).
+- Montants (`EurAmount`) : calculés en Decimal sur les kWh exacts, arrondis par `to_cents` une seule
+  fois sur le total mensuel, chaîne dans le JSON (`"25.65"`). Test de référence : l'exemple §8.3 du
+  cahier des charges (142,5 kWh → 25,65 € / 2,85 € / 22,80 €, 7,4 kg de CO2).
+- Tableau de bord : répartitions Enedis prioritaires sur la période si elles existent, sinon
+  simulation (`data_source` = `simulated` → l'app doit présenter les chiffres comme une estimation).
+  Facteur CO2 : `settings.co2_kg_per_kwh` (0,052, hypothèse à confirmer).
 - Générateur dart-dio : pas de valeur par défaut de type enum dans un schéma d'entrée (le code
   généré ne compile pas) ; rendre le champ optionnel et appliquer le défaut côté serveur.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
@@ -211,8 +219,8 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - [x] Backend : hypertables `load_curves` / `allocations`, moteur de répartition (100 % couvert),
       générateur de courbes, traitement par jour (`scripts/simulate.py`) ; mesuré : 0,34 s par jour
       pour une boucle de 50 compteurs
-- [ ] API : `/me/curves?date=` (48 pas : production, consommation, part locale) et
-      `/me/dashboard?period=` (kWh partagés, montant estimé, CO2 évité, taux d'autoconsommation)
+- [x] API : `/me/curves?date=` (pas de 30 min : production, consommation, énergie reçue / vendue)
+      et `/me/dashboard?period=` (kWh, montant estimé, commission, CO2 évité, taux) + tests
 - [ ] Mobile : onglet tableau de bord (vue jour avec fl_chart, vue mois)
 - Plus tard : planification automatique (APScheduler, worker séparé) avec la collecte Enedis.
 
