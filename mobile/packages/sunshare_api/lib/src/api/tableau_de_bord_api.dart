@@ -63,7 +63,7 @@ class TableauDeBordApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      r'date': encodeQueryParameter(_serializers, date, const FullType(Date)),
+      if (date != null) r'date': encodeQueryParameter(_serializers, date, const FullType(Date)),
     };
 
     final _response = await _dio.request<Object>(
@@ -149,7 +149,8 @@ class TableauDeBordApi {
     );
 
     final _queryParameters = <String, dynamic>{
-      r'period': encodeQueryParameter(_serializers, period, const FullType(String)),
+      if (period != null)
+        r'period': encodeQueryParameter(_serializers, period, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(

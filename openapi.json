@@ -867,16 +867,8 @@
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "date"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Journée française (défaut : hier)",
+              "type": "string",
+              "format": "date",
               "title": "Date"
             },
             "description": "Journée française (défaut : hier)"
@@ -925,16 +917,8 @@
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "description": "Mois AAAA-MM (défaut : en cours)",
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
               "title": "Period"
             },
             "description": "Mois AAAA-MM (défaut : en cours)"
@@ -1225,15 +1209,8 @@
             "in": "query",
             "required": false,
             "schema": {
-              "anyOf": [
-                {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                {
-                  "type": "null"
-                }
-              ],
+              "type": "string",
+              "format": "uuid",
               "title": "Loop Id"
             }
           }

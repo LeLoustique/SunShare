@@ -8,12 +8,14 @@ import '../auth/auth_controller.dart';
 /// Branches du StatefulShellRoute (voir router.dart), dans l'ordre de déclaration.
 const dashboardBranch = 0;
 const loopBranch = 1;
-const adminBranch = 2;
-const profileBranch = 3;
+const statementsBranch = 2;
+const adminBranch = 3;
+const adminBillingBranch = 4;
+const profileBranch = 5;
 
 /// Écrans principaux de l'utilisateur connecté, avec la barre de navigation du bas.
 /// Chaque onglet garde son état (défilement…) quand on passe à l'autre. L'administrateur a
-/// l'onglet « Boucles » (back-office) à la place du tableau de bord et de « Ma boucle ».
+/// les onglets du back-office (« Boucles », « Facturation ») à la place de ceux des participants.
 class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.shell});
 
@@ -23,8 +25,8 @@ class HomeShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAdmin = ref.watch(authControllerProvider).value?.role == UserRole.admin;
     final branches = isAdmin
-        ? [adminBranch, profileBranch]
-        : [dashboardBranch, loopBranch, profileBranch];
+        ? [adminBranch, adminBillingBranch, profileBranch]
+        : [dashboardBranch, loopBranch, statementsBranch, profileBranch];
     final selected = branches.indexOf(shell.currentIndex);
 
     return Scaffold(
@@ -37,13 +39,18 @@ class HomeShell extends ConsumerWidget {
           initialLocation: branches[index] == shell.currentIndex,
         ),
         destinations: [
-          if (isAdmin)
-            const NavigationDestination(
+          if (isAdmin) ...const [
+            NavigationDestination(
               icon: Icon(Icons.admin_panel_settings_outlined),
               selectedIcon: Icon(Icons.admin_panel_settings),
               label: 'Boucles',
-            )
-          else ...const [
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.request_quote_outlined),
+              selectedIcon: Icon(Icons.request_quote),
+              label: 'Facturation',
+            ),
+          ] else ...const [
             NavigationDestination(
               icon: Icon(Icons.insights_outlined),
               selectedIcon: Icon(Icons.insights),
@@ -53,6 +60,11 @@ class HomeShell extends ConsumerWidget {
               icon: Icon(Icons.hub_outlined),
               selectedIcon: Icon(Icons.hub),
               label: 'Ma boucle',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long),
+              label: 'Factures',
             ),
           ],
           const NavigationDestination(

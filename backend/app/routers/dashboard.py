@@ -2,6 +2,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Query
+from pydantic import WithJsonSchema
 
 from app import dashboard
 from app.deps import CurrentUser, DbSession
@@ -15,7 +16,10 @@ def read_my_curves(
     user: CurrentUser,
     db: DbSession,
     day: Annotated[
-        date | None, Query(alias="date", description="Journée française (défaut : hier)")
+        date | None,
+        Query(alias="date", description="Journée française (défaut : hier)"),
+        # Optionnel mais pas « nullable » dans le schéma : sinon le client Dart envoie `date=` vide
+        WithJsonSchema({"type": "string", "format": "date"}),
     ] = None,
 ) -> DayCurves:
     """Pas de 15 min de la journée : consommation, production et énergie locale de l'utilisateur."""
@@ -29,6 +33,7 @@ def read_my_dashboard(
     period: Annotated[
         str | None,
         Query(pattern=r"^[0-9]{4}-(0[1-9]|1[0-2])$", description="Mois AAAA-MM (défaut : en cours)"),
+        WithJsonSchema({"type": "string", "pattern": r"^[0-9]{4}-(0[1-9]|1[0-2])$"}),
     ] = None,
 ) -> Dashboard:
     """Chiffres du mois : énergie locale, montant estimé, CO2 évité, taux d'autoconsommation."""

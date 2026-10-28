@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +10,7 @@ import 'package:sunshare/features/auth/auth_repository.dart';
 import 'package:sunshare/features/dashboard/dashboard_repository.dart';
 import 'package:sunshare/features/loops/loops_repository.dart';
 import 'package:sunshare/features/meters/meters_repository.dart';
+import 'package:sunshare/features/statements/statements_repository.dart';
 import 'package:sunshare/main.dart';
 import 'package:sunshare_api/sunshare_api.dart';
 
@@ -54,6 +57,7 @@ Future<void> pumpApp(
   FakeLoopsRepository? loops,
   FakeAdminRepository? admin,
   FakeDashboardRepository? dashboard,
+  FakeStatementsRepository? statements,
 }) async {
   // Écran assez haut pour que les formulaires tiennent sans défilement
   tester.view.physicalSize = const Size(1000, 2000);
@@ -61,6 +65,7 @@ Future<void> pumpApp(
   addTearDown(tester.view.reset);
 
   final metersRepository = meters ?? FakeMetersRepository();
+  final statementsRepository = statements ?? FakeStatementsRepository();
   await tester.pumpWidget(ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(auth),
@@ -68,6 +73,11 @@ Future<void> pumpApp(
       loopsRepositoryProvider.overrideWithValue(loops ?? FakeLoopsRepository(metersRepository)),
       adminRepositoryProvider.overrideWithValue(admin ?? FakeAdminRepository()),
       dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
+      statementsRepositoryProvider.overrideWithValue(statementsRepository),
+      // Pas de vrai partage dans les tests : on note le fichier qui aurait été ouvert
+      pdfOpenerProvider.overrideWithValue(
+        (bytes, filename) async => statementsRepository.opened.add(filename),
+      ),
     ],
     child: const SunShareApp(),
   ));
@@ -347,13 +357,23 @@ AdminMemberOut adminMember({
 
 /// Simule /admin/loops : garde les boucles et les adhésions en mémoire.
 class FakeAdminRepository implements AdminRepository {
-  FakeAdminRepository({List<AdminLoopOut>? loops, List<AdminMemberOut>? members})
-      : loopList = loops ?? [],
-        memberList = members ?? [];
+  FakeAdminRepository({
+    List<AdminLoopOut>? loops,
+    List<AdminMemberOut>? members,
+    List<AdminStatementOut>? computedDrafts,
+  })  : loopList = loops ?? [],
+        memberList = members ?? [],
+        drafts = computedDrafts ?? [];
 
   final List<AdminLoopOut> loopList;
   final List<AdminMemberOut> memberList;
   final approvals = <String, Date>{};
+
+  /// Brouillons que « Calculer » produira, et relevés connus (brouillons puis émis)
+  final List<AdminStatementOut> drafts;
+  final statementList = <AdminStatementOut>[];
+  final billingRuns = <String>[];
+  var _lastNumber = 0;
 
   @override
   Future<List<AdminLoopOut>> loops() async => List.of(loopList);
@@ -404,6 +424,109 @@ class FakeAdminRepository implements AdminRepository {
   @override
   Future<AdminMemberOut> reject(String loopId, String memberId) async =>
       _setStatus(memberId, MembershipStatus.rejected);
+
+  @override
+  Future<BillingRunOut> runBilling(String month) async {
+    billingRuns.add(month);
+    statementList
+      ..removeWhere((s) => s.period == month && s.status == StatementStatus.draft)
+      ..addAll(drafts.map((d) => d.rebuild((b) => b..period = month)));
+    return BillingRunOut((b) => b
+      ..period = month
+      ..loops.add(LoopBillingOut((l) => l
+        ..loopId = 'boucle-1'
+        ..loopName = 'Saint-Leu'
+        ..statements = drafts.length
+        ..consumersEur = '27.45'
+        ..payoutsEur = '24.40'
+        ..commissionEur = '3.05')));
+  }
+
+  @override
+  Future<IssueOut> issueStatements(String month) async {
+    final numbers = <String>[];
+    for (final (i, s) in statementList.indexed) {
+      if (s.period != month || s.status != StatementStatus.draft) continue;
+      final number = 'SS-2026-${(++_lastNumber).toString().padLeft(6, '0')}';
+      numbers.add(number);
+      statementList[i] = s.rebuild((b) => b
+        ..status = StatementStatus.issued
+        ..number = number);
+    }
+    return IssueOut((b) => b
+      ..period = month
+      ..issued = numbers.length
+      ..firstNumber = numbers.first
+      ..lastNumber = numbers.last);
+  }
+
+  @override
+  Future<List<AdminStatementOut>> statements(String month) async =>
+      statementList.where((s) => s.period == month).toList();
+}
+
+StatementOut statementOut({
+  String id = 'releve-1',
+  String number = 'SS-2026-000001',
+  String period = '2026-10',
+  MeterDirection? direction,
+  String gross = '25.65',
+  String commission = '0.00',
+  String net = '25.65',
+}) =>
+    StatementOut((b) => b
+      ..id = id
+      ..number = number
+      ..loopId = 'boucle-1'
+      ..loopName = 'Saint-Leu'
+      ..period = period
+      ..direction = direction ?? MeterDirection.consumption
+      ..status = StatementStatus.issued
+      ..kwh = 142.5
+      ..priceEurKwh = '0.1800'
+      ..commissionEurKwh = '0.0200'
+      ..networkFeeEurKwh = '0.0000'
+      ..grossEur = gross
+      ..networkFeeEur = '0.00'
+      ..commissionEur = commission
+      ..netEur = net
+      ..issuedAt = DateTime.utc(2026, 11, 3, 9));
+
+AdminStatementOut draftStatement({required String id, String firstName = 'Alex', MeterDirection? direction}) =>
+    AdminStatementOut((b) => b
+      ..id = id
+      ..loopId = 'boucle-1'
+      ..loopName = 'Saint-Leu'
+      ..period = '2026-10'
+      ..direction = direction ?? MeterDirection.consumption
+      ..status = StatementStatus.draft
+      ..kwh = 142.5
+      ..priceEurKwh = '0.1800'
+      ..commissionEurKwh = '0.0200'
+      ..networkFeeEurKwh = '0.0000'
+      ..grossEur = '25.65'
+      ..networkFeeEur = '0.00'
+      ..commissionEur = '0.00'
+      ..netEur = '25.65'
+      ..firstName = firstName
+      ..lastName = 'Durand'
+      ..email = '${firstName.toLowerCase()}@exemple.fr');
+
+/// Simule /me/statements, /statements/{id} et le PDF ; `opened` = fichiers « ouverts ».
+class FakeStatementsRepository implements StatementsRepository {
+  FakeStatementsRepository([List<StatementOut>? statements]) : statementList = statements ?? [];
+
+  final List<StatementOut> statementList;
+  final opened = <String>[];
+
+  @override
+  Future<List<StatementOut>> mine() async => List.of(statementList);
+
+  @override
+  Future<StatementOut> statement(String id) async => statementList.firstWhere((s) => s.id == id);
+
+  @override
+  Future<Uint8List> pdf(String id) async => Uint8List.fromList('%PDF-1.4 $id'.codeUnits);
 }
 
 /// Simule /me/dashboard et /me/curves : par défaut, un utilisateur sans compteur ni données.

@@ -527,7 +527,8 @@ class AdminApi {
 
     final _queryParameters = <String, dynamic>{
       r'month': encodeQueryParameter(_serializers, month, const FullType(String)),
-      r'loop_id': encodeQueryParameter(_serializers, loopId, const FullType(String)),
+      if (loopId != null)
+        r'loop_id': encodeQueryParameter(_serializers, loopId, const FullType(String)),
     };
 
     final _response = await _dio.request<Object>(

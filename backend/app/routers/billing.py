@@ -2,6 +2,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, Response, status
+from pydantic import WithJsonSchema
 from sqlalchemy import select
 
 from app import billing, statement_pdf
@@ -66,7 +67,13 @@ def admin_issue_statements(month: Month, _admin: AdminUser, db: DbSession) -> Is
 
 @admin_router.get("/statements", response_model=list[AdminStatementOut])
 def admin_list_statements(
-    month: Month, _admin: AdminUser, db: DbSession, loop_id: uuid.UUID | None = None
+    month: Month,
+    _admin: AdminUser,
+    db: DbSession,
+    # Optionnel mais pas « nullable » dans le schéma : sinon le client Dart envoie `loop_id=` vide
+    loop_id: Annotated[
+        uuid.UUID | None, Query(), WithJsonSchema({"type": "string", "format": "uuid"})
+    ] = None,
 ) -> list[AdminStatementOut]:
     query = select(Statement).where(Statement.month == month_days(month)[0])
     if loop_id:

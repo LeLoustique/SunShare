@@ -34,6 +34,17 @@ class AdminRepository {
 
   Future<AdminMemberOut> reject(String loopId, String memberId) async =>
       (await _admin.adminRejectMember(loopId: loopId, memberId: memberId)).data!;
+
+  /// Calcule (ou recalcule) les brouillons du mois, sur les seules énergies Enedis.
+  Future<BillingRunOut> runBilling(String month) async =>
+      (await _admin.adminRunBilling(month: month)).data!;
+
+  /// Émet les brouillons du mois : numérotés, figés, visibles des participants.
+  Future<IssueOut> issueStatements(String month) async =>
+      (await _admin.adminIssueStatements(month: month)).data!;
+
+  Future<List<AdminStatementOut>> statements(String month) async =>
+      (await _admin.adminListStatements(month: month)).data!.toList();
 }
 
 final adminRepositoryProvider =
@@ -62,3 +73,13 @@ final allocationModeLabels = <AllocationMode, String>{
 /// Date d'entrée proposée par défaut : le 1er du mois suivant.
 Date defaultJoinDate(DateTime now) =>
     now.month == 12 ? Date(now.year + 1, 1, 1) : Date(now.year, now.month + 1, 1);
+
+final adminStatementsProvider = FutureProvider.family<List<AdminStatementOut>, String>(
+  (ref, month) => ref.watch(adminRepositoryProvider).statements(month),
+);
+
+/// Mois facturé par défaut : le précédent (Enedis publie en M+1).
+({int year, int month}) defaultBillingMonth(DateTime now) {
+  final previous = DateTime(now.year, now.month - 1);
+  return (year: previous.year, month: previous.month);
+}

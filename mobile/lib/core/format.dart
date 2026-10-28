@@ -74,3 +74,12 @@ String formatMonth(int year, int month) => '${_months[month - 1]} $year';
 
 /// « 2026-10 », format du paramètre `period` de l'API.
 String periodOf(int year, int month) => '$year-${_two(month)}';
+
+/// Énergie d'une facture, au Wh près : « 142,500 kWh ».
+String formatKwhPrecise(num kwh) => '${kwh.toStringAsFixed(3).replaceAll('.', ',')} kWh';
+
+/// « 2026-10 » → « octobre 2026 ».
+String formatPeriod(String period) {
+  final parts = period.split('-');
+  return formatMonth(int.parse(parts[0]), int.parse(parts[1]));
+}

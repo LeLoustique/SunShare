@@ -83,7 +83,7 @@ SunShare/
     │   ├── main.dart       # MaterialApp.router
     │   ├── router.dart     # go_router : redirection selon la connexion ; onglets (StatefulShellRoute)
     │   ├── core/           # api, auth_interceptor, token_storage, api_errors, format (dates, €/kWh, km)
-    │   └── features/       # auth/, home/ (onglets), dashboard/, loops/ (« Ma boucle »), admin/ (back-office), profile/, meters/, health/
+    │   └── features/       # auth/, home/ (onglets), dashboard/, loops/, statements/ (factures), admin/ (back-office + facturation), profile/, meters/, health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
@@ -145,9 +145,13 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   qui rafraîchit sur 401 et rejoue une fois. Ne pas utiliser `setOAuthToken` du client généré.
 - Mobile : l'écran ne navigue pas après connexion / déconnexion ; il change l'état
   d'`authControllerProvider` et `router.dart` redirige. Accueil de l'utilisateur connecté :
-  « Tableau de bord » (`/accueil`), puis « Ma boucle » (`/boucle`) et « Profil » (`/profil`).
-  L'administrateur a l'onglet « Boucles » (`/admin/boucles`, back-office) à la place des deux
-  premiers ; `/admin/*` redirige les autres rôles (le serveur répond 403 de toute façon).
+  « Tableau de bord » (`/accueil`), « Ma boucle » (`/boucle`), « Factures » (`/factures`), « Profil ».
+  L'administrateur a « Boucles » (`/admin/boucles`) et « Facturation » (`/admin/facturation`) à la
+  place des onglets participants ; `/admin/*` redirige les autres rôles (le serveur répond 403).
+- PDF dans l'app : `pdfOpenerProvider` (paquet `printing` : téléchargement sur le web, partage sur
+  mobile), remplacé dans les tests par un enregistreur des fichiers « ouverts ».
+- Vérifier un parcours de facturation de bout en bout sans toucher au compteur de numéros de la base
+  de dev : lancer une API temporaire sur la base de test (`DATABASE_URL=…_test uvicorn … --port 8001`).
 - Back-office : même application Flutter (cible web pour la PMO). Tarifs saisis convertis par
   `parseEurPerKwh` (« 0,18 » → « 0.18 ») et comparés par `eurPerKwhUnits` (entiers), sans `double`.
 - Tests Flutter : `pumpApp` (test/helpers.dart) lance l'app complète sur des dépôts simulés
@@ -215,6 +219,9 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   Facteur CO2 : `settings.co2_kg_per_kwh` (0,052, hypothèse à confirmer).
 - Générateur dart-dio : pas de valeur par défaut de type enum dans un schéma d'entrée (le code
   généré ne compile pas) ; rendre le champ optionnel et appliquer le défaut côté serveur.
+- Générateur dart-dio : un paramètre de requête **facultatif** ne doit pas être `anyOf [type, null]`
+  (le client l'enverrait vide, `loop_id=`, et FastAPI répond 422) → `X | None = None` +
+  `WithJsonSchema({...})` sans null. `tests/test_openapi.py` le vérifie sur toute l'API.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
   absentes des modèles sont ignorées par `include_object` dans `migrations/env.py`.
 - Chaque fonctionnalité arrive avec ses tests ; la CI doit rester verte.
@@ -275,7 +282,8 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
       émission, `/admin/billing/run|issue|statements`, `/me/statements`, `/statements/{id}` ;
       couverture 100 % (CI : `app.allocation` et `app.billing` ≥ 90 %)
 - [x] Factures et relevés en PDF (PAY-03) : `GET /statements/{id}/pdf`, archivage à l'émission
-- [ ] App : historique et détail des relevés ; back-office : lancer, vérifier, émettre la facturation
+- [x] App : onglet « Factures » (liste, détail, PDF) ; back-office « Facturation » (mois, calcul des
+      brouillons, récapitulatif par boucle, aperçu PDF, émission confirmée)
 - [ ] Paiements (PAY-01, 02, 04, 05) : bloqués sans compte Mangopay / Stripe Connect
 - Plus tard : avoirs (correction d'un relevé émis), historique des tarifs (TAR-03), planification.
 
