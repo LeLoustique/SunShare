@@ -40,6 +40,10 @@ Cahier des charges complet : https://claude.ai/code/artifact/c29d0cf5-0e33-44ba-
 SunShare/
 ├── CLAUDE.md
 ├── dev.sh                  # démarre la base + migrations + API
+├── openapi.json            # schéma de l'API, généré (backend/scripts/export_openapi.py)
+├── scripts/
+│   ├── gen_client.sh       # openapi.json → client Dart (openapi-generator via Docker)
+│   └── openapi-generator.yaml
 ├── .github/workflows/ci.yml
 ├── infra/
 │   ├── docker-compose.yml  # base (port hôte 5433) + Adminer (http://localhost:8080)
@@ -58,9 +62,11 @@ SunShare/
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
 │   │   └── routers/        # auth.py (/auth/register, /login, /refresh), me.py (/me)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
+│   ├── scripts/export_openapi.py
 │   └── tests/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
-    ├── lib/main.dart       # écran qui appelle /health
+    ├── lib/main.dart       # écran qui appelle /health via le client généré
+    ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/widget_test.dart
 ```
 
@@ -79,6 +85,9 @@ ruff check .                            # lint
 pytest -v                               # tests (la base doit tourner)
 alembic revision --autogenerate -m "..."  # nouvelle migration : TOUJOURS relire le fichier avant upgrade
 alembic upgrade head
+
+# Client Dart : à relancer après toute modification d'une route ou d'un schéma Pydantic
+./scripts/gen_client.sh                 # (Docker requis) ; la CI échoue si openapi.json est périmé
 
 # Mobile, dans mobile/
 flutter run -d chrome
@@ -108,6 +117,10 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 ## Conventions
 
 - API REST versionnée sous `/api/v1` ; erreurs au format FastAPI (`detail`) pour l'instant.
+- `operationId` = nom de la fonction Python (`login`, `read_me`…) → méthodes du client Dart ; les
+  `tags` donnent les classes (`AuthApi`, `ProfilApi`…). Toujours un `response_model` sur les routes.
+- Client généré en mode `built_value` (le mode json_serializable envoie un formulaire vide à `login`).
+  Jeton : `api.setOAuthToken('OAuth2PasswordBearer', accessToken)`.
 - Identifiants UUID générés par la base (`gen_random_uuid()`), horodatages `timestamptz` en UTC.
 - E-mails stockés en minuscules.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
@@ -123,7 +136,7 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 **Sprint 1 — en cours** : authentification.
 - [x] Backend : `/auth/register`, `/auth/login`, `/auth/refresh`, `/me` + tests (à vérifier : `pytest`
       doit afficher 10 passed, CI avec `JWT_SECRET`)
-- [ ] Générer le client Dart depuis l'OpenAPI (`/openapi.json`)
+- [x] Générer le client Dart depuis l'OpenAPI (`scripts/gen_client.sh`, testé de bout en bout)
 - [ ] Écrans Flutter : inscription, connexion, stockage des jetons (`flutter_secure_storage`),
       rafraîchissement automatique, écran profil
 - [ ] Ajout d'un compteur : adresse géocodée (Base Adresse Nationale) + PRM (14 chiffres)

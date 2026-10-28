@@ -15,6 +15,7 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+    - packages/**   # code généré (client de l'API)
 
 linter:
   # The lint rules applied to this project can be customized in the

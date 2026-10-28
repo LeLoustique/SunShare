@@ -42,3 +42,8 @@ class TokenPair(BaseModel):
 
 class RefreshRequest(BaseModel):
     refresh_token: str
+
+
+class HealthOut(BaseModel):
+    status: str
+    extensions: dict[str, str]

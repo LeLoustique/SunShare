@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sunshare_api/sunshare_api.dart';
 
 /// Adresse de l'API, modifiable au lancement :
 /// flutter run --dart-define=API_URL=http://10.0.2.2:8000   (émulateur Android)
@@ -14,8 +15,11 @@ final dioProvider = Provider<Dio>(
   )),
 );
 
-final healthProvider = FutureProvider<Map<String, dynamic>>((ref) async {
-  final response = await ref.watch(dioProvider).get<Map<String, dynamic>>('/health');
+/// Client généré (mobile/packages/sunshare_api) : authApi, profilApi, techniqueApi…
+final apiProvider = Provider<SunshareApi>((ref) => SunshareApi(dio: ref.watch(dioProvider)));
+
+final healthProvider = FutureProvider<HealthOut>((ref) async {
+  final response = await ref.watch(apiProvider).getTechniqueApi().health();
   return response.data!;
 });
 
@@ -65,15 +69,14 @@ class HealthScreen extends ConsumerWidget {
               ],
             ),
             data: (data) {
-              final extensions = (data['extensions'] as Map).cast<String, dynamic>();
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.check_circle, size: 56, color: Colors.green),
                   const SizedBox(height: 16),
-                  Text('API : ${data['status']}', style: const TextStyle(fontSize: 20)),
+                  Text('API : ${data.status}', style: const TextStyle(fontSize: 20)),
                   const SizedBox(height: 8),
-                  for (final ext in extensions.entries) Text('${ext.key} ${ext.value}'),
+                  for (final ext in data.extensions.entries) Text('${ext.key} ${ext.value}'),
                 ],
               );
             },

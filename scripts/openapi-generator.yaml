@@ -1,0 +1,9 @@
+# Options du générateur dart-dio (voir scripts/gen_client.sh)
+additionalProperties:
+  pubName: sunshare_api
+  pubDescription: "Client Dart de l API SunShare, code genere par scripts/gen_client.sh"
+  pubAuthor: SunShare
+  pubVersion: 0.2.0
+  serializationLibrary: built_value   # json_serializable : bug, login() envoie un formulaire vide
+  dateLibrary: core
+  hideGenerationTimestamp: true

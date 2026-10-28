@@ -57,6 +57,12 @@ jobs:
       - name: Tests
         run: pytest -v
 
+      # openapi.json (et donc le client Dart) doit refléter le code : sinon lancer scripts/gen_client.sh
+      - name: Schéma OpenAPI à jour
+        run: |
+          python scripts/export_openapi.py
+          git diff --exit-code ../openapi.json
+
   mobile:
     runs-on: ubuntu-latest
     defaults:

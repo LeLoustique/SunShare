@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshare/main.dart';
+import 'package:sunshare_api/sunshare_api.dart';
 
 void main() {
   testWidgets("affiche le statut renvoyé par l'API", (tester) async {
@@ -8,7 +9,9 @@ void main() {
       ProviderScope(
         overrides: [
           healthProvider.overrideWith(
-            (ref) async => {'status': 'ok', 'extensions': {'postgis': '3.5'}},
+            (ref) async => HealthOut((b) => b
+              ..status = 'ok'
+              ..extensions.addAll({'postgis': '3.5'})),
           ),
         ],
         child: const SunShareApp(),

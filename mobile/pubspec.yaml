@@ -36,6 +36,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^3.4.3
   dio: ^5.11.1
+  # Client de l'API généré depuis openapi.json : ne pas modifier, relancer scripts/gen_client.sh
+  sunshare_api:
+    path: packages/sunshare_api
 
 dev_dependencies:
   flutter_test:
