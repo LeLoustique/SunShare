@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:sunshare_api/sunshare_api.dart';
 
 import '../../core/api_errors.dart';
+import '../../core/format.dart';
 import 'meters_repository.dart';
 
 /// « Mes compteurs », affiché dans le profil.

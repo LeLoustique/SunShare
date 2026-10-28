@@ -70,9 +70,9 @@ SunShare/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
     ├── lib/
     │   ├── main.dart       # MaterialApp.router
-    │   ├── router.dart     # go_router : redirection selon l'état de connexion
-    │   ├── core/           # api.dart (dio + client), auth_interceptor.dart, token_storage.dart, api_errors.dart
-    │   └── features/       # auth/, profile/, meters/ (liste, ajout avec autocomplétion), health/
+    │   ├── router.dart     # go_router : redirection selon la connexion ; onglets (StatefulShellRoute)
+    │   ├── core/           # api, auth_interceptor, token_storage, api_errors, format (dates, €/kWh, km)
+    │   └── features/       # auth/, home/ (barre d'onglets), loops/ (« Ma boucle »), profile/, meters/, health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
@@ -131,7 +131,12 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Mobile : le jeton est ajouté par `AuthInterceptor` (routes dont `extra['secure']` est non vide),
   qui rafraîchit sur 401 et rejoue une fois. Ne pas utiliser `setOAuthToken` du client généré.
 - Mobile : l'écran ne navigue pas après connexion / déconnexion ; il change l'état
-  d'`authControllerProvider` et `router.dart` redirige. Tests : surcharger `authRepositoryProvider`.
+  d'`authControllerProvider` et `router.dart` redirige. Accueil de l'utilisateur connecté :
+  onglet « Ma boucle » (`/boucle`), puis « Profil » (`/profil`).
+- Tests Flutter : `pumpApp` (test/helpers.dart) lance l'app complète sur des dépôts simulés
+  (`FakeAuthRepository`, `FakeMetersRepository`, `FakeLoopsRepository`) ; `goToProfile` ouvre l'onglet.
+- Mobile : tarifs affichés avec `formatPrice`, qui travaille sur la chaîne (« 0.1800 » → « 0,18 €/kWh »),
+  jamais via un `double`.
 - Identifiants UUID générés par la base (`gen_random_uuid()`), horodatages `timestamptz` en UTC.
 - E-mails stockés en minuscules.
 - Adresses : l'app propose les suggestions de `/addresses` ; à la création d'un compteur, le
@@ -176,7 +181,8 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - [x] Backend : tables `loops` / `loop_members`, `/loops/available`, `/loops/{id}/join` (409 hors
       périmètre), `/loops/{id}`, `/me/memberships`, `/admin/loops` (création, modification,
       membres, validation avec date d'entrée, refus) + tests
-- [ ] Mobile utilisateur : boucles disponibles, demande d'adhésion, écran « Ma boucle »
+- [x] Mobile utilisateur : onglets « Ma boucle » / « Profil », boucles disponibles, demande
+      d'adhésion (tous les compteurs compatibles), annulation, détail agrégé de la boucle
 - [ ] Back-office administrateur (Flutter web) : boucles, validation des adhésions
 - Reporté : consentement Enedis obligatoire avant l'adhésion (sprint Enedis), sortie d'un membre
   avec préavis (LOOP-05, P2), carte des participants aux positions floues.

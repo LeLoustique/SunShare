@@ -20,16 +20,18 @@ void main() {
     expect(find.text('Mon profil'), findsNothing);
   });
 
-  testWidgets('avec une session enregistrée, ouvre directement le profil', (tester) async {
+  testWidgets('avec une session enregistrée, ouvre directement l’accueil', (tester) async {
     await startApp(tester, loggedIn: true);
+    expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
 
+    await goToProfile(tester);
     expect(find.text('Mon profil'), findsOneWidget);
     expect(find.text('Camille Martin'), findsOneWidget);
     expect(find.text('Producteur'), findsOneWidget);
     expect(find.text('28/10/2026'), findsOneWidget);
   });
 
-  testWidgets('connexion réussie : bascule vers le profil', (tester) async {
+  testWidgets('connexion réussie : bascule vers l’accueil', (tester) async {
     await startApp(tester);
 
     await tester.enterText(field('E-mail'), 'camille@exemple.fr');
@@ -37,7 +39,8 @@ void main() {
     await tester.tap(find.text('Se connecter'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Mon profil'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
+    await goToProfile(tester);
     expect(find.text('camille@exemple.fr'), findsOneWidget);
   });
 
@@ -82,7 +85,7 @@ void main() {
     expect(repository.registered, isNull);
   });
 
-  testWidgets('inscription réussie : connecte et ouvre le profil', (tester) async {
+  testWidgets('inscription réussie : connecte l’utilisateur', (tester) async {
     final repository = await startApp(tester);
     await tester.tap(find.text('Pas encore de compte ? Créer un compte'));
     await tester.pumpAndSettle();
@@ -97,6 +100,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(repository.registered!.role, UserRole.mixed);
+    await goToProfile(tester);
     expect(find.text('Alex Durand'), findsOneWidget);
     expect(find.text('Producteur et consommateur'), findsOneWidget);
   });
@@ -119,6 +123,7 @@ void main() {
 
   testWidgets('déconnexion après confirmation : retour à la connexion', (tester) async {
     final repository = await startApp(tester, loggedIn: true);
+    await goToProfile(tester);
 
     await tester.tap(find.widgetWithText(OutlinedButton, 'Se déconnecter'));
     await tester.pumpAndSettle();

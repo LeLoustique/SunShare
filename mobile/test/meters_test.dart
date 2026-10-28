@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshare/features/meters/add_meter_screen.dart';
-import 'package:sunshare/features/meters/meters_repository.dart';
+import 'package:sunshare/core/format.dart';
 import 'package:sunshare_api/sunshare_api.dart';
 
 import 'helpers.dart';
@@ -15,6 +15,7 @@ Future<FakeMetersRepository> openAddMeter(
 }) async {
   final repository = FakeMetersRepository(meters);
   await pumpApp(tester, auth: FakeAuthRepository(loggedIn: true, role: role), meters: repository);
+  await goToProfile(tester);
   await tester.tap(find.text('Ajouter un compteur'));
   await tester.pumpAndSettle();
   return repository;
@@ -32,6 +33,7 @@ Future<void> chooseAddress(WidgetTester tester) async {
 void main() {
   testWidgets('profil sans compteur : invite à en ajouter un', (tester) async {
     await pumpApp(tester, auth: FakeAuthRepository(loggedIn: true));
+    await goToProfile(tester);
 
     expect(find.text('Aucun compteur pour le moment'), findsOneWidget);
     expect(find.text('Ajouter un compteur'), findsOneWidget);
@@ -45,6 +47,7 @@ void main() {
         meter(prm: '12345678901234', direction: MeterDirection.production, peakKw: 6.5),
       ]),
     );
+    await goToProfile(tester);
 
     expect(find.text('Production · 6,5 kWc'), findsOneWidget);
     expect(find.textContaining('PRM 12345678901234'), findsOneWidget);
@@ -144,6 +147,7 @@ void main() {
   testWidgets('suppression après confirmation', (tester) async {
     final repository = FakeMetersRepository([meter(prm: '12345678901234')]);
     await pumpApp(tester, auth: FakeAuthRepository(loggedIn: true), meters: repository);
+    await goToProfile(tester);
 
     await tester.tap(find.byTooltip('Supprimer'));
     await tester.pumpAndSettle();

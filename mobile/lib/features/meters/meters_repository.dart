@@ -50,9 +50,3 @@ List<MeterDirection> allowedDirections(UserRole role) => switch (role.name) {
       'consumer' => [MeterDirection.consumption],
       _ => [MeterDirection.consumption, MeterDirection.production],
     };
-
-/// « 6,5 kWc » : virgule décimale, sans zéros inutiles.
-String formatKw(num kw) {
-  final text = kw == kw.roundToDouble() ? kw.toInt().toString() : kw.toString();
-  return '${text.replaceAll('.', ',')} kWc';
-}

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshare/core/token_storage.dart';
 import 'package:sunshare/features/auth/auth_repository.dart';
+import 'package:sunshare/features/loops/loops_repository.dart';
 import 'package:sunshare/features/meters/meters_repository.dart';
 import 'package:sunshare/main.dart';
 import 'package:sunshare_api/sunshare_api.dart';
@@ -48,19 +49,28 @@ Future<void> pumpApp(
   WidgetTester tester, {
   required FakeAuthRepository auth,
   FakeMetersRepository? meters,
+  FakeLoopsRepository? loops,
 }) async {
   // Écran assez haut pour que les formulaires tiennent sans défilement
   tester.view.physicalSize = const Size(1000, 2000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
 
+  final metersRepository = meters ?? FakeMetersRepository();
   await tester.pumpWidget(ProviderScope(
     overrides: [
       authRepositoryProvider.overrideWithValue(auth),
-      metersRepositoryProvider.overrideWithValue(meters ?? FakeMetersRepository()),
+      metersRepositoryProvider.overrideWithValue(metersRepository),
+      loopsRepositoryProvider.overrideWithValue(loops ?? FakeLoopsRepository(metersRepository)),
     ],
     child: const SunShareApp(),
   ));
+  await tester.pumpAndSettle();
+}
+
+/// L'accueil est « Ma boucle » : ouvre l'onglet Profil.
+Future<void> goToProfile(WidgetTester tester) async {
+  await tester.tap(find.text('Profil'));
   await tester.pumpAndSettle();
 }
 
@@ -181,3 +191,99 @@ MeterOut meter({
       ..longitude = amiens.longitude
       ..peakKw = peakKw
       ..createdAt = DateTime.utc(2026, 10, 28));
+
+AvailableLoop availableLoop({
+  String id = 'boucle-1',
+  String name = 'Saint-Leu',
+  String price = '0.1800',
+  required List<String> joinable,
+}) =>
+    AvailableLoop((b) => b
+      ..id = id
+      ..name = name
+      ..perimeterKm = 2
+      ..priceEurKwh = price
+      ..memberCount = 3
+      ..joinableMeterIds.addAll(joinable));
+
+LoopOut loopOut({String id = 'boucle-1', String name = 'Saint-Leu'}) => LoopOut((b) => b
+  ..id = id
+  ..name = name
+  ..perimeterKm = 2
+  ..priceEurKwh = '0.1800'
+  ..status = LoopStatus.open
+  ..stats.memberCount = 3
+  ..stats.producerCount = 1
+  ..stats.consumerCount = 2
+  ..stats.totalPeakKw = 9
+  ..stats.diameterKm = 0.814);
+
+MembershipOut membership(
+  MeterOut meter, {
+  String loopId = 'boucle-1',
+  String loopName = 'Saint-Leu',
+  MembershipStatus? status,
+  Date? joinedAt,
+}) =>
+    MembershipOut((b) => b
+      ..id = 'adhesion-${meter.id}-$loopId'
+      ..loopId = loopId
+      ..loopName = loopName
+      ..meterId = meter.id
+      ..prm = meter.prm
+      ..direction = meter.direction
+      ..status = status ?? MembershipStatus.pending
+      ..requestedAt = DateTime.utc(2026, 10, 28)
+      ..joinedAt = joinedAt);
+
+/// Simule /loops et /me/memberships. Une adhésion crée une demande en attente ; [refusedLoops]
+/// répondent 409 (hors périmètre).
+class FakeLoopsRepository implements LoopsRepository {
+  FakeLoopsRepository(
+    this._meters, {
+    List<AvailableLoop>? available,
+    List<MembershipOut>? memberships,
+    this.refusedLoops = const {},
+  })  : availableLoops = available ?? [],
+        membershipList = memberships ?? [];
+
+  final FakeMetersRepository _meters;
+  final List<AvailableLoop> availableLoops;
+  final List<MembershipOut> membershipList;
+  final Set<String> refusedLoops;
+
+  bool _engaged(String meterId) =>
+      membershipList.any((m) => m.meterId == meterId && isEngaged(m));
+
+  @override
+  Future<List<AvailableLoop>> available() async => [
+        for (final loop in availableLoops)
+          if (loop.joinableMeterIds.any((id) => !_engaged(id)))
+            loop.rebuild((b) => b.joinableMeterIds.where((id) => !_engaged(id))),
+      ];
+
+  @override
+  Future<List<MembershipOut>> memberships() async => List.of(membershipList);
+
+  @override
+  Future<LoopOut> loop(String id) async {
+    final name = membershipList.firstWhere((m) => m.loopId == id).loopName;
+    return loopOut(id: id, name: name);
+  }
+
+  @override
+  Future<MembershipOut> join(String loopId, String meterId) async {
+    if (refusedLoops.contains(loopId)) {
+      throw apiError(409, 'Votre compteur est hors du périmètre de la boucle');
+    }
+    final loop = availableLoops.firstWhere((l) => l.id == loopId);
+    final meter = _meters.meters.firstWhere((m) => m.id == meterId);
+    final created = membership(meter, loopId: loopId, loopName: loop.name);
+    membershipList.insert(0, created);
+    return created;
+  }
+
+  @override
+  Future<void> cancel(String membershipId) async =>
+      membershipList.removeWhere((m) => m.id == membershipId);
+}

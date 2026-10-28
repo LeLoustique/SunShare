@@ -2,15 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/format.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_layout.dart';
 import '../meters/meters_section.dart';
-
-String _formatDate(DateTime date) {
-  final d = date.toLocal();
-  String two(int n) => n.toString().padLeft(2, '0');
-  return '${two(d.day)}/${two(d.month)}/${d.year}';
-}
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -87,7 +82,7 @@ class ProfileScreen extends ConsumerWidget {
                 ListTile(
                   leading: const Icon(Icons.event_outlined),
                   title: const Text('Membre depuis le'),
-                  subtitle: Text(_formatDate(user.createdAt)),
+                  subtitle: Text(formatDateTime(user.createdAt)),
                 ),
               ],
             ),
