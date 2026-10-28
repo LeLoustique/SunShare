@@ -89,7 +89,7 @@ Toutes depuis Git Bash. Docker Desktop doit être lancé.
 source .venv/Scripts/activate
 uvicorn app.main:app --reload          # API seule
 ruff check .                            # lint
-pytest -v                               # tests (la base doit tourner)
+pytest -v                               # tests : base sunshare_test recréée à chaque lancement
 alembic revision --autogenerate -m "..."  # nouvelle migration : TOUJOURS relire le fichier avant upgrade
 alembic upgrade head
 python scripts/promote_admin.py e-mail  # donne le rôle admin (PMO) : il ne se choisit pas à l'inscription
@@ -138,6 +138,10 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   serveur **re-géocode** le libellé (score ≥ 0,8, type `housenumber` ou `locality`) et ne fait jamais
   confiance à des coordonnées envoyées par le client (elles servent au contrôle du périmètre).
   Limite connue : un lieu-dit sans numéro typé `street` par la BAN est refusé.
+- Tests backend : base **séparée** `sunshare_test` (nom de la base de dev + `_test`, même serveur),
+  supprimée puis recréée et migrée à chaque `pytest` par `tests/conftest.py` ; garde-fou : refus si le
+  nom ne finit pas par `_test`. `TEST_DATABASE_URL` permet d'en imposer une autre. Ne jamais importer
+  `app` avant que conftest ait fixé `DATABASE_URL`.
 - Tests backend : `tests/conftest.py` remplace le géocodeur par `FakeGeocoder` (aucun appel réseau) ;
   `site(km)` fabrique une adresse à km vers l'est d'Amiens pour tester les distances.
 - Périmètre (`perimeter.py`, cahier des charges §8.1) : un site rejoint une boucle si sa distance au
@@ -180,5 +184,4 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 **Sprints suivants** : courbes simulées et moteur de répartition → intégration Enedis (sandbox Data
 Connect) → facturation et paiements → pilote.
 
-**Plus tard** : vérification de l'e-mail, révocation des jetons, base de test séparée pour pytest
-(les tests remplissent la base de dev : boucles « Boucle de test », comptes `@sunshare-test.fr`).
+**Plus tard** : vérification de l'e-mail, révocation des jetons.
