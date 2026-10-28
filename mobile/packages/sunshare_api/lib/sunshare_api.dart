@@ -10,12 +10,18 @@ export 'package:sunshare_api/src/auth/oauth.dart';
 export 'package:sunshare_api/src/serializers.dart';
 export 'package:sunshare_api/src/model/date.dart';
 
+export 'package:sunshare_api/src/api/adresses_api.dart';
 export 'package:sunshare_api/src/api/auth_api.dart';
+export 'package:sunshare_api/src/api/compteurs_api.dart';
 export 'package:sunshare_api/src/api/profil_api.dart';
 export 'package:sunshare_api/src/api/technique_api.dart';
 
+export 'package:sunshare_api/src/model/address_suggestion.dart';
 export 'package:sunshare_api/src/model/http_validation_error.dart';
 export 'package:sunshare_api/src/model/health_out.dart';
+export 'package:sunshare_api/src/model/meter_create.dart';
+export 'package:sunshare_api/src/model/meter_direction.dart';
+export 'package:sunshare_api/src/model/meter_out.dart';
 export 'package:sunshare_api/src/model/refresh_request.dart';
 export 'package:sunshare_api/src/model/token_pair.dart';
 export 'package:sunshare_api/src/model/user_create.dart';

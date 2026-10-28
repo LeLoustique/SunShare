@@ -57,10 +57,11 @@ SunShare/
 │   │   ├── config.py       # Settings (pydantic-settings)
 │   │   ├── db.py           # engine, SessionLocal, get_db
 │   │   ├── models.py       # User, Meter (+ enums UserRole, MeterDirection)
-│   │   ├── schemas.py      # UserCreate, UserOut, TokenPair, RefreshRequest
+│   │   ├── schemas.py      # utilisateurs, jetons, compteurs (MeterCreate/Out), AddressSuggestion
+│   │   ├── geocoding.py    # Base Adresse Nationale (Géoplateforme IGN) ; dépendance get_geocoder
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
-│   │   └── routers/        # auth.py (/auth/register, /login, /refresh), me.py (/me)
+│   │   └── routers/        # auth.py, me.py, meters.py (/meters), addresses.py (/addresses)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
 │   ├── scripts/export_openapi.py
 │   └── tests/
@@ -69,7 +70,7 @@ SunShare/
     │   ├── main.dart       # MaterialApp.router
     │   ├── router.dart     # go_router : redirection selon l'état de connexion
     │   ├── core/           # api.dart (dio + client), auth_interceptor.dart, token_storage.dart, api_errors.dart
-    │   └── features/       # auth/ (repository, contrôleur, écrans), profile/, health/
+    │   └── features/       # auth/, profile/, meters/ (liste, ajout avec autocomplétion), health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
@@ -130,6 +131,11 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   d'`authControllerProvider` et `router.dart` redirige. Tests : surcharger `authRepositoryProvider`.
 - Identifiants UUID générés par la base (`gen_random_uuid()`), horodatages `timestamptz` en UTC.
 - E-mails stockés en minuscules.
+- Adresses : l'app propose les suggestions de `/addresses` ; à la création d'un compteur, le
+  serveur **re-géocode** le libellé (score ≥ 0,8, type `housenumber` ou `locality`) et ne fait jamais
+  confiance à des coordonnées envoyées par le client (elles servent au contrôle du périmètre).
+  Limite connue : un lieu-dit sans numéro typé `street` par la BAN est refusé.
+- Tests backend : surcharger `get_geocoder` (`app.dependency_overrides`), jamais d'appel réseau.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
   absentes des modèles sont ignorées par `include_object` dans `migrations/env.py`.
 - Chaque fonctionnalité arrive avec ses tests ; la CI doit rester verte.
@@ -140,13 +146,14 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 **Sprint 0 — terminé** : monorepo, base Docker, FastAPI + `/health`, Alembic (`users`, `meters`),
 app Flutter qui appelle `/health`, CI GitHub Actions.
 
-**Sprint 1 — en cours** : authentification.
-- [x] Backend : `/auth/register`, `/auth/login`, `/auth/refresh`, `/me` + tests (à vérifier : `pytest`
-      doit afficher 10 passed, CI avec `JWT_SECRET`)
+**Sprint 1** : authentification et compteurs.
+- [x] Backend : `/auth/register`, `/auth/login`, `/auth/refresh`, `/me` + tests
 - [x] Générer le client Dart depuis l'OpenAPI (`scripts/gen_client.sh`, testé de bout en bout)
 - [x] Écrans Flutter : inscription, connexion, stockage des jetons (`flutter_secure_storage`),
       rafraîchissement automatique, écran profil
-- [ ] Ajout d'un compteur : adresse géocodée (Base Adresse Nationale) + PRM (14 chiffres)
+- [x] Ajout d'un compteur : adresse géocodée (Base Adresse Nationale) + PRM (14 chiffres)
+
+**Sprint 1 — terminé.**
 
 **Sprints suivants** : boucles et contrôle du périmètre (PostGIS) → courbes simulées et moteur de
 répartition → intégration Enedis (sandbox Data Connect) → facturation et paiements → pilote.

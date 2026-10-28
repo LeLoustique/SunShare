@@ -14,8 +14,12 @@ import 'package:built_value/iso_8601_date_time_serializer.dart';
 import 'package:sunshare_api/src/date_serializer.dart';
 import 'package:sunshare_api/src/model/date.dart';
 
+import 'package:sunshare_api/src/model/address_suggestion.dart';
 import 'package:sunshare_api/src/model/http_validation_error.dart';
 import 'package:sunshare_api/src/model/health_out.dart';
+import 'package:sunshare_api/src/model/meter_create.dart';
+import 'package:sunshare_api/src/model/meter_direction.dart';
+import 'package:sunshare_api/src/model/meter_out.dart';
 import 'package:sunshare_api/src/model/refresh_request.dart';
 import 'package:sunshare_api/src/model/token_pair.dart';
 import 'package:sunshare_api/src/model/user_create.dart';
@@ -27,8 +31,12 @@ import 'package:sunshare_api/src/model/validation_error_loc_inner.dart';
 part 'serializers.g.dart';
 
 @SerializersFor([
+  AddressSuggestion,
   HTTPValidationError,
   HealthOut,
+  MeterCreate,
+  MeterDirection,
+  MeterOut,
   RefreshRequest,
   TokenPair,
   UserCreate,
@@ -38,6 +46,14 @@ part 'serializers.g.dart';
   ValidationErrorLocInner,
 ])
 Serializers serializers = (_$serializers.toBuilder()
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AddressSuggestion)]),
+        () => ListBuilder<AddressSuggestion>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MeterOut)]),
+        () => ListBuilder<MeterOut>(),
+      )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())
       ..add(const DateSerializer())

@@ -47,19 +47,14 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:sunshare_api/sunshare_api.dart';
 
 
-final api = SunshareApi().getAuthApi();
-final String username = username_example; // String | 
-final String password = password_example; // String | 
-final String grantType = grantType_example; // String | 
-final String scope = scope_example; // String | 
-final String clientId = clientId_example; // String | 
-final String clientSecret = clientSecret_example; // String | 
+final api = SunshareApi().getAdressesApi();
+final String q = q_example; // String | 
 
 try {
-    final response = await api.login(username, password, grantType, scope, clientId, clientSecret);
+    final response = await api.searchAddresses(q);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AuthApi->login: $e\n");
+    print("Exception when calling AdressesApi->searchAddresses: $e\n");
 }
 
 ```
@@ -70,17 +65,25 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*AdressesApi*](doc/AdressesApi.md) | [**searchAddresses**](doc/AdressesApi.md#searchaddresses) | **GET** /api/v1/addresses | Search Addresses
 [*AuthApi*](doc/AuthApi.md) | [**login**](doc/AuthApi.md#login) | **POST** /api/v1/auth/login | Login
 [*AuthApi*](doc/AuthApi.md) | [**refresh**](doc/AuthApi.md#refresh) | **POST** /api/v1/auth/refresh | Refresh
 [*AuthApi*](doc/AuthApi.md) | [**register**](doc/AuthApi.md#register) | **POST** /api/v1/auth/register | Register
+[*CompteursApi*](doc/CompteursApi.md) | [**createMeter**](doc/CompteursApi.md#createmeter) | **POST** /api/v1/meters | Create Meter
+[*CompteursApi*](doc/CompteursApi.md) | [**deleteMeter**](doc/CompteursApi.md#deletemeter) | **DELETE** /api/v1/meters/{meter_id} | Delete Meter
+[*CompteursApi*](doc/CompteursApi.md) | [**listMeters**](doc/CompteursApi.md#listmeters) | **GET** /api/v1/meters | List Meters
 [*ProfilApi*](doc/ProfilApi.md) | [**readMe**](doc/ProfilApi.md#readme) | **GET** /api/v1/me | Read Me
 [*TechniqueApi*](doc/TechniqueApi.md) | [**health**](doc/TechniqueApi.md#health) | **GET** /health | Health
 
 
 ## Documentation For Models
 
+ - [AddressSuggestion](doc/AddressSuggestion.md)
  - [HTTPValidationError](doc/HTTPValidationError.md)
  - [HealthOut](doc/HealthOut.md)
+ - [MeterCreate](doc/MeterCreate.md)
+ - [MeterDirection](doc/MeterDirection.md)
+ - [MeterOut](doc/MeterOut.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [TokenPair](doc/TokenPair.md)
  - [UserCreate](doc/UserCreate.md)

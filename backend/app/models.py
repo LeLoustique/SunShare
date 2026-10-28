@@ -4,7 +4,16 @@ from datetime import datetime
 from decimal import Decimal
 
 from geoalchemy2 import Geography
-from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String, UniqueConstraint, func
+from sqlalchemy import (
+    CheckConstraint,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Numeric,
+    String,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -41,7 +50,10 @@ class User(Base):
 class Meter(Base):
     __tablename__ = "meters"
     # Un même PRM peut exister deux fois : en soutirage et en injection (utilisateur mixte)
-    __table_args__ = (UniqueConstraint("prm", "direction", name="uq_meters_prm_direction"),)
+    __table_args__ = (
+        UniqueConstraint("prm", "direction", name="uq_meters_prm_direction"),
+        CheckConstraint("prm ~ '^[0-9]{14}$'", name="ck_meters_prm_digits"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)

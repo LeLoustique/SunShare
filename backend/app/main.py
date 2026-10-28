@@ -4,7 +4,7 @@ from fastapi.routing import APIRoute
 from sqlalchemy import text
 
 from app.db import engine
-from app.routers import auth, me
+from app.routers import addresses, auth, me, meters
 from app.schemas import HealthOut
 
 
@@ -25,6 +25,8 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(me.router, prefix="/api/v1")
+app.include_router(meters.router, prefix="/api/v1")
+app.include_router(addresses.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["technique"], response_model=HealthOut)

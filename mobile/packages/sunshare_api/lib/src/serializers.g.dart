@@ -7,8 +7,12 @@ part of 'serializers.dart';
 // **************************************************************************
 
 Serializers _$serializers = (Serializers().toBuilder()
+      ..add(AddressSuggestion.serializer)
       ..add(HTTPValidationError.serializer)
       ..add(HealthOut.serializer)
+      ..add(MeterCreate.serializer)
+      ..add(MeterDirection.serializer)
+      ..add(MeterOut.serializer)
       ..add(RefreshRequest.serializer)
       ..add(TokenPair.serializer)
       ..add(UserCreate.serializer)

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../auth/auth_controller.dart';
 import '../auth/auth_layout.dart';
+import '../meters/meters_section.dart';
 
 String _formatDate(DateTime date) {
   final d = date.toLocal();
@@ -92,6 +93,8 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+          const MetersSection(),
+          const SizedBox(height: 32),
           OutlinedButton.icon(
             onPressed: () => _confirmLogout(context, ref),
             icon: const Icon(Icons.logout),

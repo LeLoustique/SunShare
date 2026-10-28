@@ -8,6 +8,7 @@ import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/startup_screen.dart';
 import 'features/health/health_screen.dart';
+import 'features/meters/add_meter_screen.dart';
 import 'features/profile/profile_screen.dart';
 
 const _guestRoutes = {'/connexion', '/inscription'};
@@ -39,6 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/connexion', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/inscription', builder: (_, _) => const RegisterScreen()),
       GoRoute(path: '/profil', builder: (_, _) => const ProfileScreen()),
+      GoRoute(path: '/compteurs/ajout', builder: (_, _) => const AddMeterScreen()),
       GoRoute(path: '/etat-api', builder: (_, _) => const HealthScreen()),
     ],
   );

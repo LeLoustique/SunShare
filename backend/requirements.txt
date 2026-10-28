@@ -9,3 +9,4 @@ pyjwt
 pwdlib[argon2]
 pydantic[email]
 python-multipart
+httpx

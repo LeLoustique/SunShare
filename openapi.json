@@ -155,6 +155,176 @@
         ]
       }
     },
+    "/api/v1/meters": {
+      "get": {
+        "tags": [
+          "compteurs"
+        ],
+        "summary": "List Meters",
+        "description": "Compteurs de l'utilisateur connecté (jamais ceux des autres).",
+        "operationId": "list_meters",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MeterOut"
+                  },
+                  "type": "array",
+                  "title": "Response List Meters"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "compteurs"
+        ],
+        "summary": "Create Meter",
+        "operationId": "create_meter",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeterCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeterOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/meters/{meter_id}": {
+      "delete": {
+        "tags": [
+          "compteurs"
+        ],
+        "summary": "Delete Meter",
+        "operationId": "delete_meter",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "meter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Meter Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/addresses": {
+      "get": {
+        "tags": [
+          "adresses"
+        ],
+        "summary": "Search Addresses",
+        "description": "Suggestions d'adresses précises (numéro ou lieu-dit) pendant la saisie.",
+        "operationId": "search_addresses",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 200,
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AddressSuggestion"
+                  },
+                  "title": "Response Search Addresses"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -180,6 +350,39 @@
   },
   "components": {
     "schemas": {
+      "AddressSuggestion": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "postcode": {
+            "type": "string",
+            "title": "Postcode"
+          },
+          "city": {
+            "type": "string",
+            "title": "City"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "label",
+          "postcode",
+          "city",
+          "latitude",
+          "longitude"
+        ],
+        "title": "AddressSuggestion"
+      },
       "Body_login": {
         "properties": {
           "grant_type": {
@@ -272,6 +475,113 @@
           "extensions"
         ],
         "title": "HealthOut"
+      },
+      "MeterCreate": {
+        "properties": {
+          "prm": {
+            "type": "string",
+            "pattern": "^[0-9]{14}$",
+            "title": "Prm",
+            "examples": [
+              "12345678901234"
+            ]
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "address": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 3,
+            "title": "Address"
+          },
+          "peak_kw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Kw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "prm",
+          "direction",
+          "address"
+        ],
+        "title": "MeterCreate"
+      },
+      "MeterDirection": {
+        "type": "string",
+        "enum": [
+          "consumption",
+          "production"
+        ],
+        "title": "MeterDirection"
+      },
+      "MeterOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "prm": {
+            "type": "string",
+            "title": "Prm"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "latitude": {
+            "type": "number",
+            "title": "Latitude"
+          },
+          "longitude": {
+            "type": "number",
+            "title": "Longitude"
+          },
+          "peak_kw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Kw"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "prm",
+          "direction",
+          "address",
+          "latitude",
+          "longitude",
+          "peak_kw",
+          "created_at"
+        ],
+        "title": "MeterOut"
       },
       "RefreshRequest": {
         "properties": {

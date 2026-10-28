@@ -1,24 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sunshare/features/auth/auth_repository.dart';
-import 'package:sunshare/main.dart';
 import 'package:sunshare_api/sunshare_api.dart';
 
 import 'helpers.dart';
 
 Future<FakeAuthRepository> startApp(WidgetTester tester, {bool loggedIn = false}) async {
-  // Écran assez haut pour que tout le formulaire d'inscription soit visible
-  tester.view.physicalSize = const Size(1000, 2000);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-
   final repository = FakeAuthRepository(loggedIn: loggedIn);
-  await tester.pumpWidget(ProviderScope(
-    overrides: [authRepositoryProvider.overrideWithValue(repository)],
-    child: const SunShareApp(),
-  ));
-  await tester.pumpAndSettle();
+  await pumpApp(tester, auth: repository);
   return repository;
 }
 

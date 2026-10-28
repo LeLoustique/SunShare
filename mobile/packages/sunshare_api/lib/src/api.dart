@@ -9,7 +9,9 @@ import 'package:sunshare_api/src/auth/api_key_auth.dart';
 import 'package:sunshare_api/src/auth/basic_auth.dart';
 import 'package:sunshare_api/src/auth/bearer_auth.dart';
 import 'package:sunshare_api/src/auth/oauth.dart';
+import 'package:sunshare_api/src/api/adresses_api.dart';
 import 'package:sunshare_api/src/api/auth_api.dart';
+import 'package:sunshare_api/src/api/compteurs_api.dart';
 import 'package:sunshare_api/src/api/profil_api.dart';
 import 'package:sunshare_api/src/api/technique_api.dart';
 
@@ -72,10 +74,22 @@ class SunshareApi {
     }
   }
 
+  /// Get AdressesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  AdressesApi getAdressesApi() {
+    return AdressesApi(dio, serializers);
+  }
+
   /// Get AuthApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   AuthApi getAuthApi() {
     return AuthApi(dio, serializers);
+  }
+
+  /// Get CompteursApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  CompteursApi getCompteursApi() {
+    return CompteursApi(dio, serializers);
   }
 
   /// Get ProfilApi instance, base route and serializer can be overridden by a given but be careful,
