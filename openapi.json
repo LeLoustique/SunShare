@@ -964,6 +964,258 @@
         }
       }
     },
+    "/api/v1/me/statements": {
+      "get": {
+        "tags": [
+          "facturation"
+        ],
+        "summary": "List My Statements",
+        "description": "Relevés émis de l'utilisateur, du plus récent au plus ancien (brouillons cachés).",
+        "operationId": "list_my_statements",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StatementOut"
+                  },
+                  "type": "array",
+                  "title": "Response List My Statements"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/statements/{statement_id}": {
+      "get": {
+        "tags": [
+          "facturation"
+        ],
+        "summary": "Read Statement",
+        "operationId": "read_statement",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Statement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatementOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/billing/run": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Run Billing",
+        "description": "Calcule les relevés du mois en brouillon, sur les seules énergies Enedis (recalculable).",
+        "operationId": "admin_run_billing",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+              "description": "Mois AAAA-MM",
+              "title": "Month"
+            },
+            "description": "Mois AAAA-MM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingRunOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/billing/issue": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Issue Statements",
+        "description": "Émet les brouillons du mois : numérotés, figés et visibles des participants.",
+        "operationId": "admin_issue_statements",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+              "description": "Mois AAAA-MM",
+              "title": "Month"
+            },
+            "description": "Mois AAAA-MM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssueOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/billing/statements": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin List Statements",
+        "operationId": "admin_list_statements",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
+              "description": "Mois AAAA-MM",
+              "title": "Month"
+            },
+            "description": "Mois AAAA-MM"
+          },
+          {
+            "name": "loop_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Loop Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminStatementOut"
+                  },
+                  "title": "Response Admin List Statements"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -1211,6 +1463,152 @@
         ],
         "title": "AdminMemberOut"
       },
+      "AdminStatementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "loop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Loop Id"
+          },
+          "loop_name": {
+            "type": "string",
+            "title": "Loop Name"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatementStatus"
+          },
+          "kwh": {
+            "type": "number",
+            "title": "Kwh"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "commission_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Commission Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "network_fee_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Network Fee Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "gross_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Gross Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "network_fee_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Network Fee Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "commission_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Commission Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "net_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Net Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "loop_id",
+          "loop_name",
+          "period",
+          "direction",
+          "status",
+          "kwh",
+          "price_eur_kwh",
+          "commission_eur_kwh",
+          "network_fee_eur_kwh",
+          "gross_eur",
+          "network_fee_eur",
+          "commission_eur",
+          "net_eur",
+          "issued_at",
+          "first_name",
+          "last_name",
+          "email"
+        ],
+        "title": "AdminStatementOut"
+      },
       "AllocationMode": {
         "type": "string",
         "enum": [
@@ -1284,6 +1682,35 @@
           "joinable_meter_ids"
         ],
         "title": "AvailableLoop"
+      },
+      "BillingRunOut": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "loops": {
+            "items": {
+              "$ref": "#/components/schemas/LoopBillingOut"
+            },
+            "type": "array",
+            "title": "Loops"
+          },
+          "skipped": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skipped"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "loops",
+          "skipped"
+        ],
+        "title": "BillingRunOut"
       },
       "Body_login": {
         "properties": {
@@ -1577,6 +2004,34 @@
         ],
         "title": "HealthOut"
       },
+      "IssueOut": {
+        "properties": {
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "issued": {
+            "type": "integer",
+            "title": "Issued"
+          },
+          "first_number": {
+            "type": "string",
+            "title": "First Number"
+          },
+          "last_number": {
+            "type": "string",
+            "title": "Last Number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "period",
+          "issued",
+          "first_number",
+          "last_number"
+        ],
+        "title": "IssueOut"
+      },
       "JoinRequest": {
         "properties": {
           "meter_id": {
@@ -1590,6 +2045,57 @@
           "meter_id"
         ],
         "title": "JoinRequest"
+      },
+      "LoopBillingOut": {
+        "properties": {
+          "loop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Loop Id"
+          },
+          "loop_name": {
+            "type": "string",
+            "title": "Loop Name"
+          },
+          "statements": {
+            "type": "integer",
+            "title": "Statements"
+          },
+          "consumers_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Consumers Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "payouts_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Payouts Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "commission_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Commission Eur",
+            "examples": [
+              "25.65"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "loop_id",
+          "loop_name",
+          "statements",
+          "consumers_eur",
+          "payouts_eur",
+          "commission_eur"
+        ],
+        "title": "LoopBillingOut"
       },
       "LoopCreate": {
         "properties": {
@@ -2086,6 +2592,146 @@
           "refresh_token"
         ],
         "title": "RefreshRequest"
+      },
+      "StatementOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "loop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Loop Id"
+          },
+          "loop_name": {
+            "type": "string",
+            "title": "Loop Name"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatementStatus"
+          },
+          "kwh": {
+            "type": "number",
+            "title": "Kwh"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "commission_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Commission Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "network_fee_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Network Fee Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "gross_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Gross Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "network_fee_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Network Fee Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "commission_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Commission Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "net_eur": {
+            "type": "string",
+            "pattern": "^-?[0-9]+\\.[0-9]{2}$",
+            "title": "Net Eur",
+            "examples": [
+              "25.65"
+            ]
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "number",
+          "loop_id",
+          "loop_name",
+          "period",
+          "direction",
+          "status",
+          "kwh",
+          "price_eur_kwh",
+          "commission_eur_kwh",
+          "network_fee_eur_kwh",
+          "gross_eur",
+          "network_fee_eur",
+          "commission_eur",
+          "net_eur",
+          "issued_at"
+        ],
+        "title": "StatementOut",
+        "description": "Relevé : facture (consumption) ou reversement (production). Montants exacts en chaîne."
+      },
+      "StatementStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "issued"
+        ],
+        "title": "StatementStatus"
       },
       "TokenPair": {
         "properties": {

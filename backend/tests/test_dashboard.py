@@ -142,8 +142,10 @@ def test_mois_d_un_producteur(loop):
         sold = allocated(db, producer=meter, first=DAY1, last=DAY2)
     assert producer["sold_kwh"] == pytest.approx(float(sold), abs=1e-3)
     assert 0 < producer["local_share"] <= 1
-    assert producer["commission_eur"] == str(to_cents(sold * Decimal("0.02")))
-    assert producer["net_eur"] == str(to_cents(sold * Decimal("0.16")))
+    commission = to_cents(sold * Decimal("0.02"))
+    assert producer["commission_eur"] == str(commission)
+    # Même règle que le relevé de reversement : net = brut − commission
+    assert producer["net_eur"] == str(to_cents(sold * Decimal("0.18")) - commission)
 
 
 def test_exemple_du_cahier_des_charges(admin):

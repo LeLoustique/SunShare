@@ -20,6 +20,7 @@ from app.models import (
     LoopStatus,
     MembershipStatus,
     MeterDirection,
+    StatementStatus,
     UserRole,
 )
 
@@ -282,3 +283,54 @@ class Dashboard(BaseModel):
     producer: ProducerSummary | None
     co2_avoided_kg: float
     co2_kg_per_kwh: float
+
+
+class StatementOut(BaseModel):
+    """Relevé : facture (consumption) ou reversement (production). Montants exacts en chaîne."""
+
+    id: uuid.UUID
+    number: str | None
+    loop_id: uuid.UUID
+    loop_name: str
+    period: str
+    direction: MeterDirection
+    status: StatementStatus
+    kwh: float
+    price_eur_kwh: EurPerKwh
+    commission_eur_kwh: EurPerKwh
+    network_fee_eur_kwh: EurPerKwh
+    gross_eur: EurAmount
+    network_fee_eur: EurAmount
+    commission_eur: EurAmount
+    # Consommateur : montant dû ; producteur : montant reversé
+    net_eur: EurAmount
+    issued_at: datetime | None
+
+
+class AdminStatementOut(StatementOut):
+    first_name: str
+    last_name: str
+    email: str
+
+
+class LoopBillingOut(BaseModel):
+    loop_id: uuid.UUID
+    loop_name: str
+    statements: int
+    consumers_eur: EurAmount
+    payouts_eur: EurAmount
+    commission_eur: EurAmount
+
+
+class BillingRunOut(BaseModel):
+    period: str
+    loops: list[LoopBillingOut]
+    # Boucles non facturées et pourquoi (déjà émise, pas de données Enedis)
+    skipped: list[str]
+
+
+class IssueOut(BaseModel):
+    period: str
+    issued: int
+    first_number: str
+    last_number: str

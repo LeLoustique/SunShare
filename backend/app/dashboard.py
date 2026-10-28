@@ -13,9 +13,9 @@ from decimal import Decimal
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.billing import NO_AMOUNT, consumer_amounts, producer_amounts
 from app.config import settings
 from app.models import Allocation, DataSource, LoadCurve, Loop, Meter, MeterDirection, User
-from app.money import to_cents
 from app.schemas import ConsumerSummary, CurveStep, Dashboard, DayCurves, ProducerSummary
 from app.timesteps import HOURS_PER_STEP, PARIS, bounds, day_steps, month_days
 
@@ -147,6 +147,7 @@ def month_dashboard(db: Session, user: User, period: str) -> Dashboard:
     received = sum(received_by_loop.values(), ZERO)
     sold = sum(sold_by_loop.values(), ZERO)
     directions = set(meters.values())
+    network_fee = settings.network_fee_eur_kwh
 
     consumer = None
     if MeterDirection.consumption in directions:
@@ -155,30 +156,29 @@ def month_dashboard(db: Session, user: User, period: str) -> Dashboard:
             consumption_kwh=_number(consumption),
             local_kwh=_number(received),
             self_consumption_rate=_rate(received, consumption),
-            amount_eur=to_cents(
-                sum((kwh * loops[i].price_eur_kwh for i, kwh in received_by_loop.items()), ZERO)
+            # Mêmes règles que la facture (billing.py) ; estimation tant que la source est simulée
+            amount_eur=sum(
+                (
+                    consumer_amounts(kwh, loops[i].price_eur_kwh, network_fee).gross
+                    for i, kwh in received_by_loop.items()
+                ),
+                NO_AMOUNT,
             ),
         )
 
     producer = None
     if MeterDirection.production in directions:
+        payouts = [
+            producer_amounts(kwh, loops[i].price_eur_kwh, loops[i].commission_eur_kwh)
+            for i, kwh in sold_by_loop.items()
+        ]
         production = energy[MeterDirection.production]
         producer = ProducerSummary(
             production_kwh=_number(production),
             sold_kwh=_number(sold),
             local_share=_rate(sold, production),
-            commission_eur=to_cents(
-                sum((kwh * loops[i].commission_eur_kwh for i, kwh in sold_by_loop.items()), ZERO)
-            ),
-            net_eur=to_cents(
-                sum(
-                    (
-                        kwh * (loops[i].price_eur_kwh - loops[i].commission_eur_kwh)
-                        for i, kwh in sold_by_loop.items()
-                    ),
-                    ZERO,
-                )
-            ),
+            commission_eur=sum((a.commission for a in payouts), NO_AMOUNT),
+            net_eur=sum((a.net for a in payouts), NO_AMOUNT),
         )
 
     return Dashboard(

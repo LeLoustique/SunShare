@@ -14,6 +14,7 @@ import 'package:sunshare_api/src/api/adresses_api.dart';
 import 'package:sunshare_api/src/api/auth_api.dart';
 import 'package:sunshare_api/src/api/boucles_api.dart';
 import 'package:sunshare_api/src/api/compteurs_api.dart';
+import 'package:sunshare_api/src/api/facturation_api.dart';
 import 'package:sunshare_api/src/api/profil_api.dart';
 import 'package:sunshare_api/src/api/tableau_de_bord_api.dart';
 import 'package:sunshare_api/src/api/technique_api.dart';
@@ -105,6 +106,12 @@ class SunshareApi {
   /// by doing that all interceptors will not be executed
   CompteursApi getCompteursApi() {
     return CompteursApi(dio, serializers);
+  }
+
+  /// Get FacturationApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  FacturationApi getFacturationApi() {
+    return FacturationApi(dio, serializers);
   }
 
   /// Get ProfilApi instance, base route and serializer can be overridden by a given but be careful,

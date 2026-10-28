@@ -17,9 +17,11 @@ import 'package:sunshare_api/src/model/date.dart';
 import 'package:sunshare_api/src/model/address_suggestion.dart';
 import 'package:sunshare_api/src/model/admin_loop_out.dart';
 import 'package:sunshare_api/src/model/admin_member_out.dart';
+import 'package:sunshare_api/src/model/admin_statement_out.dart';
 import 'package:sunshare_api/src/model/allocation_mode.dart';
 import 'package:sunshare_api/src/model/approve_request.dart';
 import 'package:sunshare_api/src/model/available_loop.dart';
+import 'package:sunshare_api/src/model/billing_run_out.dart';
 import 'package:sunshare_api/src/model/consumer_summary.dart';
 import 'package:sunshare_api/src/model/curve_step.dart';
 import 'package:sunshare_api/src/model/dashboard.dart';
@@ -27,7 +29,9 @@ import 'package:sunshare_api/src/model/data_source.dart';
 import 'package:sunshare_api/src/model/day_curves.dart';
 import 'package:sunshare_api/src/model/http_validation_error.dart';
 import 'package:sunshare_api/src/model/health_out.dart';
+import 'package:sunshare_api/src/model/issue_out.dart';
 import 'package:sunshare_api/src/model/join_request.dart';
+import 'package:sunshare_api/src/model/loop_billing_out.dart';
 import 'package:sunshare_api/src/model/loop_create.dart';
 import 'package:sunshare_api/src/model/loop_out.dart';
 import 'package:sunshare_api/src/model/loop_stats.dart';
@@ -40,6 +44,8 @@ import 'package:sunshare_api/src/model/meter_direction.dart';
 import 'package:sunshare_api/src/model/meter_out.dart';
 import 'package:sunshare_api/src/model/producer_summary.dart';
 import 'package:sunshare_api/src/model/refresh_request.dart';
+import 'package:sunshare_api/src/model/statement_out.dart';
+import 'package:sunshare_api/src/model/statement_status.dart';
 import 'package:sunshare_api/src/model/token_pair.dart';
 import 'package:sunshare_api/src/model/user_create.dart';
 import 'package:sunshare_api/src/model/user_out.dart';
@@ -53,9 +59,11 @@ part 'serializers.g.dart';
   AddressSuggestion,
   AdminLoopOut,
   AdminMemberOut,
+  AdminStatementOut,
   AllocationMode,
   ApproveRequest,
   AvailableLoop,
+  BillingRunOut,
   ConsumerSummary,
   CurveStep,
   Dashboard,
@@ -63,7 +71,9 @@ part 'serializers.g.dart';
   DayCurves,
   HTTPValidationError,
   HealthOut,
+  IssueOut,
   JoinRequest,
+  LoopBillingOut,
   LoopCreate,
   LoopOut,
   LoopStats,
@@ -76,6 +86,8 @@ part 'serializers.g.dart';
   MeterOut,
   ProducerSummary,
   RefreshRequest,
+  StatementOut,
+  StatementStatus,
   TokenPair,
   UserCreate,
   UserOut,
@@ -85,12 +97,20 @@ part 'serializers.g.dart';
 ])
 Serializers serializers = (_$serializers.toBuilder()
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(StatementOut)]),
+        () => ListBuilder<StatementOut>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AddressSuggestion)]),
         () => ListBuilder<AddressSuggestion>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AdminMemberOut)]),
         () => ListBuilder<AdminMemberOut>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AdminStatementOut)]),
+        () => ListBuilder<AdminStatementOut>(),
       )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(AvailableLoop)]),

@@ -69,9 +69,12 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 [*AdminApi*](doc/AdminApi.md) | [**adminApproveMember**](doc/AdminApi.md#adminapprovemember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/approve | Admin Approve Member
 [*AdminApi*](doc/AdminApi.md) | [**adminCreateLoop**](doc/AdminApi.md#admincreateloop) | **POST** /api/v1/admin/loops | Admin Create Loop
+[*AdminApi*](doc/AdminApi.md) | [**adminIssueStatements**](doc/AdminApi.md#adminissuestatements) | **POST** /api/v1/admin/billing/issue | Admin Issue Statements
 [*AdminApi*](doc/AdminApi.md) | [**adminListLoops**](doc/AdminApi.md#adminlistloops) | **GET** /api/v1/admin/loops | Admin List Loops
 [*AdminApi*](doc/AdminApi.md) | [**adminListMembers**](doc/AdminApi.md#adminlistmembers) | **GET** /api/v1/admin/loops/{loop_id}/members | Admin List Members
+[*AdminApi*](doc/AdminApi.md) | [**adminListStatements**](doc/AdminApi.md#adminliststatements) | **GET** /api/v1/admin/billing/statements | Admin List Statements
 [*AdminApi*](doc/AdminApi.md) | [**adminRejectMember**](doc/AdminApi.md#adminrejectmember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/reject | Admin Reject Member
+[*AdminApi*](doc/AdminApi.md) | [**adminRunBilling**](doc/AdminApi.md#adminrunbilling) | **POST** /api/v1/admin/billing/run | Admin Run Billing
 [*AdminApi*](doc/AdminApi.md) | [**adminUpdateLoop**](doc/AdminApi.md#adminupdateloop) | **PATCH** /api/v1/admin/loops/{loop_id} | Admin Update Loop
 [*AdressesApi*](doc/AdressesApi.md) | [**searchAddresses**](doc/AdressesApi.md#searchaddresses) | **GET** /api/v1/addresses | Search Addresses
 [*AuthApi*](doc/AuthApi.md) | [**login**](doc/AuthApi.md#login) | **POST** /api/v1/auth/login | Login
@@ -85,6 +88,8 @@ Class | Method | HTTP request | Description
 [*CompteursApi*](doc/CompteursApi.md) | [**createMeter**](doc/CompteursApi.md#createmeter) | **POST** /api/v1/meters | Create Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**deleteMeter**](doc/CompteursApi.md#deletemeter) | **DELETE** /api/v1/meters/{meter_id} | Delete Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**listMeters**](doc/CompteursApi.md#listmeters) | **GET** /api/v1/meters | List Meters
+[*FacturationApi*](doc/FacturationApi.md) | [**listMyStatements**](doc/FacturationApi.md#listmystatements) | **GET** /api/v1/me/statements | List My Statements
+[*FacturationApi*](doc/FacturationApi.md) | [**readStatement**](doc/FacturationApi.md#readstatement) | **GET** /api/v1/statements/{statement_id} | Read Statement
 [*ProfilApi*](doc/ProfilApi.md) | [**readMe**](doc/ProfilApi.md#readme) | **GET** /api/v1/me | Read Me
 [*TableauDeBordApi*](doc/TableauDeBordApi.md) | [**readMyCurves**](doc/TableauDeBordApi.md#readmycurves) | **GET** /api/v1/me/curves | Read My Curves
 [*TableauDeBordApi*](doc/TableauDeBordApi.md) | [**readMyDashboard**](doc/TableauDeBordApi.md#readmydashboard) | **GET** /api/v1/me/dashboard | Read My Dashboard
@@ -96,9 +101,11 @@ Class | Method | HTTP request | Description
  - [AddressSuggestion](doc/AddressSuggestion.md)
  - [AdminLoopOut](doc/AdminLoopOut.md)
  - [AdminMemberOut](doc/AdminMemberOut.md)
+ - [AdminStatementOut](doc/AdminStatementOut.md)
  - [AllocationMode](doc/AllocationMode.md)
  - [ApproveRequest](doc/ApproveRequest.md)
  - [AvailableLoop](doc/AvailableLoop.md)
+ - [BillingRunOut](doc/BillingRunOut.md)
  - [ConsumerSummary](doc/ConsumerSummary.md)
  - [CurveStep](doc/CurveStep.md)
  - [Dashboard](doc/Dashboard.md)
@@ -106,7 +113,9 @@ Class | Method | HTTP request | Description
  - [DayCurves](doc/DayCurves.md)
  - [HTTPValidationError](doc/HTTPValidationError.md)
  - [HealthOut](doc/HealthOut.md)
+ - [IssueOut](doc/IssueOut.md)
  - [JoinRequest](doc/JoinRequest.md)
+ - [LoopBillingOut](doc/LoopBillingOut.md)
  - [LoopCreate](doc/LoopCreate.md)
  - [LoopOut](doc/LoopOut.md)
  - [LoopStats](doc/LoopStats.md)
@@ -119,6 +128,8 @@ Class | Method | HTTP request | Description
  - [MeterOut](doc/MeterOut.md)
  - [ProducerSummary](doc/ProducerSummary.md)
  - [RefreshRequest](doc/RefreshRequest.md)
+ - [StatementOut](doc/StatementOut.md)
+ - [StatementStatus](doc/StatementStatus.md)
  - [TokenPair](doc/TokenPair.md)
  - [UserCreate](doc/UserCreate.md)
  - [UserOut](doc/UserOut.md)

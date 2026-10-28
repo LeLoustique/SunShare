@@ -23,6 +23,15 @@ void main() {
       // TODO
     });
 
+    // Admin Issue Statements
+    //
+    // Émet les brouillons du mois : numérotés, figés et visibles des participants.
+    //
+    //Future<IssueOut> adminIssueStatements(String month) async
+    test('test adminIssueStatements', () async {
+      // TODO
+    });
+
     // Admin List Loops
     //
     //Future<BuiltList<AdminLoopOut>> adminListLoops() async
@@ -37,10 +46,26 @@ void main() {
       // TODO
     });
 
+    // Admin List Statements
+    //
+    //Future<BuiltList<AdminStatementOut>> adminListStatements(String month, { String loopId }) async
+    test('test adminListStatements', () async {
+      // TODO
+    });
+
     // Admin Reject Member
     //
     //Future<AdminMemberOut> adminRejectMember(String loopId, String memberId) async
     test('test adminRejectMember', () async {
+      // TODO
+    });
+
+    // Admin Run Billing
+    //
+    // Calcule les relevés du mois en brouillon, sur les seules énergies Enedis (recalculable).
+    //
+    //Future<BillingRunOut> adminRunBilling(String month) async
+    test('test adminRunBilling', () async {
       // TODO
     });
 

@@ -63,6 +63,11 @@ class DataSource(str, enum.Enum):
     simulated = "simulated"
 
 
+class StatementStatus(str, enum.Enum):
+    draft = "draft"  # recalculable, invisible des participants
+    issued = "issued"  # émis : numéroté et figé
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -195,3 +200,57 @@ class Allocation(Base):
     consumer_meter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("meters.id"), primary_key=True)
     source: Mapped[DataSource] = mapped_column(Enum(DataSource, name="data_source"), primary_key=True)
     kwh: Mapped[Decimal] = mapped_column(Numeric(14, 6))
+
+
+class Statement(Base):
+    """Relevé mensuel d'un participant dans une boucle : facture (consommation) ou reversement
+    (production). Calculé uniquement sur les énergies Enedis ; figé une fois émis.
+    """
+
+    __tablename__ = "statements"
+    __table_args__ = (
+        UniqueConstraint(
+            "loop_id", "user_id", "month", "direction", name="uq_statements_participant"
+        ),
+        CheckConstraint("extract(day from month) = 1", name="ck_statements_first_of_month"),
+        CheckConstraint("gross_eur = commission_eur + net_eur", name="ck_statements_amounts"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    loop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("loops.id"), index=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    # Premier jour du mois facturé
+    month: Mapped[date] = mapped_column(Date)
+    # consumption : facture du consommateur ; production : relevé de reversement du producteur
+    direction: Mapped[MeterDirection] = mapped_column(Enum(MeterDirection, name="meter_direction"))
+    kwh: Mapped[Decimal] = mapped_column(Numeric(14, 6))
+    # Tarifs en vigueur au moment du calcul, conservés tels quels
+    price_eur_kwh: Mapped[Decimal] = mapped_column(Numeric(6, 4))
+    commission_eur_kwh: Mapped[Decimal] = mapped_column(Numeric(6, 4))
+    network_fee_eur_kwh: Mapped[Decimal] = mapped_column(Numeric(6, 4))
+    # Consommateur : brut = net = montant dû ; producteur : brut − commission = net reversé
+    gross_eur: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    network_fee_eur: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    commission_eur: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    net_eur: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    status: Mapped[StatementStatus] = mapped_column(
+        Enum(StatementStatus, name="statement_status"), server_default=StatementStatus.draft.value
+    )
+    # Numéro de facture chronologique et sans trou, attribué à l'émission (SS-2026-000001)
+    number: Mapped[str | None] = mapped_column(String(20), unique=True)
+    issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    loop: Mapped[Loop] = relationship()
+    user: Mapped[User] = relationship()
+
+
+class StatementCounter(Base):
+    """Dernier numéro de relevé attribué, par année : verrouillé ligne par ligne pendant l'émission,
+    il garantit une numérotation sans trou (une séquence PostgreSQL peut en laisser).
+    """
+
+    __tablename__ = "statement_counters"
+
+    year: Mapped[int] = mapped_column(primary_key=True, autoincrement=False)
+    last_number: Mapped[int]

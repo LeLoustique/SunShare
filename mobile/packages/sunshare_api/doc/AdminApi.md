@@ -11,9 +11,12 @@ Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**adminApproveMember**](AdminApi.md#adminapprovemember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/approve | Admin Approve Member
 [**adminCreateLoop**](AdminApi.md#admincreateloop) | **POST** /api/v1/admin/loops | Admin Create Loop
+[**adminIssueStatements**](AdminApi.md#adminissuestatements) | **POST** /api/v1/admin/billing/issue | Admin Issue Statements
 [**adminListLoops**](AdminApi.md#adminlistloops) | **GET** /api/v1/admin/loops | Admin List Loops
 [**adminListMembers**](AdminApi.md#adminlistmembers) | **GET** /api/v1/admin/loops/{loop_id}/members | Admin List Members
+[**adminListStatements**](AdminApi.md#adminliststatements) | **GET** /api/v1/admin/billing/statements | Admin List Statements
 [**adminRejectMember**](AdminApi.md#adminrejectmember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/reject | Admin Reject Member
+[**adminRunBilling**](AdminApi.md#adminrunbilling) | **POST** /api/v1/admin/billing/run | Admin Run Billing
 [**adminUpdateLoop**](AdminApi.md#adminupdateloop) | **PATCH** /api/v1/admin/loops/{loop_id} | Admin Update Loop
 
 
@@ -109,6 +112,51 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **adminIssueStatements**
+> IssueOut adminIssueStatements(month)
+
+Admin Issue Statements
+
+Émet les brouillons du mois : numérotés, figés et visibles des participants.
+
+### Example
+```dart
+import 'package:sunshare_api/api.dart';
+// TODO Configure OAuth2 access token for authorization: OAuth2PasswordBearer
+//defaultApiClient.getAuthentication<OAuth>('OAuth2PasswordBearer').accessToken = 'YOUR_ACCESS_TOKEN';
+
+final api = SunshareApi().getAdminApi();
+final String month = month_example; // String | Mois AAAA-MM
+
+try {
+    final response = api.adminIssueStatements(month);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminIssueStatements: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **month** | **String**| Mois AAAA-MM | 
+
+### Return type
+
+[**IssueOut**](IssueOut.md)
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **adminListLoops**
 > BuiltList<AdminLoopOut> adminListLoops()
 
@@ -191,6 +239,51 @@ Name | Type | Description  | Notes
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **adminListStatements**
+> BuiltList<AdminStatementOut> adminListStatements(month, loopId)
+
+Admin List Statements
+
+### Example
+```dart
+import 'package:sunshare_api/api.dart';
+// TODO Configure OAuth2 access token for authorization: OAuth2PasswordBearer
+//defaultApiClient.getAuthentication<OAuth>('OAuth2PasswordBearer').accessToken = 'YOUR_ACCESS_TOKEN';
+
+final api = SunshareApi().getAdminApi();
+final String month = month_example; // String | Mois AAAA-MM
+final String loopId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+
+try {
+    final response = api.adminListStatements(month, loopId);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminListStatements: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **month** | **String**| Mois AAAA-MM | 
+ **loopId** | **String**|  | [optional] 
+
+### Return type
+
+[**BuiltList&lt;AdminStatementOut&gt;**](AdminStatementOut.md)
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **adminRejectMember**
 > AdminMemberOut adminRejectMember(loopId, memberId)
 
@@ -224,6 +317,51 @@ Name | Type | Description  | Notes
 ### Return type
 
 [**AdminMemberOut**](AdminMemberOut.md)
+
+### Authorization
+
+[OAuth2PasswordBearer](../README.md#OAuth2PasswordBearer)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **adminRunBilling**
+> BillingRunOut adminRunBilling(month)
+
+Admin Run Billing
+
+Calcule les relevés du mois en brouillon, sur les seules énergies Enedis (recalculable).
+
+### Example
+```dart
+import 'package:sunshare_api/api.dart';
+// TODO Configure OAuth2 access token for authorization: OAuth2PasswordBearer
+//defaultApiClient.getAuthentication<OAuth>('OAuth2PasswordBearer').accessToken = 'YOUR_ACCESS_TOKEN';
+
+final api = SunshareApi().getAdminApi();
+final String month = month_example; // String | Mois AAAA-MM
+
+try {
+    final response = api.adminRunBilling(month);
+    print(response);
+} catch on DioException (e) {
+    print('Exception when calling AdminApi->adminRunBilling: $e\n');
+}
+```
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **month** | **String**| Mois AAAA-MM | 
+
+### Return type
+
+[**BillingRunOut**](BillingRunOut.md)
 
 ### Authorization
 

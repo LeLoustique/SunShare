@@ -69,10 +69,11 @@ SunShare/
 │   │   ├── jobs.py         # traitement d'une journée : courbes simulées puis répartition
 │   │   ├── dashboard.py    # courbe du jour et chiffres du mois d'un utilisateur
 │   │   ├── money.py        # to_cents : arrondi au centime, une seule fois, sur le total
+│   │   ├── billing.py      # relevés mensuels : montants, brouillons, émission numérotée
 │   │   ├── enedis/         # client.py (interface du connecteur PMO), importer.py (import mensuel)
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
-│   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin, dashboard (/me/curves, /me/dashboard)
+│   │   └── routers/        # auth, me, meters, addresses, loops, admin, dashboard, billing (/me/statements, /admin/billing)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
 │   ├── scripts/            # export_openapi.py, promote_admin.py, simulate.py, import_enedis.py
 │   └── tests/
@@ -195,6 +196,14 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Montants (`EurAmount`) : calculés en Decimal sur les kWh exacts, arrondis par `to_cents` une seule
   fois sur le total mensuel, chaîne dans le JSON (`"25.65"`). Test de référence : l'exemple §8.3 du
   cahier des charges (142,5 kWh → 25,65 € / 2,85 € / 22,80 €, 7,4 kg de CO2).
+- Facturation (`billing.py`, §8.3, TAR-02) : uniquement les énergies `enedis` (REP-03). Facture
+  consommateur = kWh reçus × tarif (+ TURPE `network_fee_eur_kwh`, 0 par défaut) ; reversement
+  producteur : brut = kWh × tarif, commission = kWh × commission, **net = brut − commission**
+  (contrainte en base sur chaque relevé ; le tableau de bord applique les mêmes fonctions).
+  Brouillon recalculable → émission : numéro `SS-AAAA-NNNNNN` **chronologique et sans trou** (compteur
+  `statement_counters` verrouillé AVANT la lecture des brouillons), tarifs figés, plus jamais modifié ;
+  les participants ne voient que les relevés émis. Ne jamais émettre sur la base de dev pour tester
+  (le compteur avancerait) : les tests le couvrent sur la base de test.
 - Tableau de bord : répartitions Enedis prioritaires sur la période si elles existent, sinon
   simulation (`data_source` = `simulated` → l'app doit présenter les chiffres comme une estimation).
   Facteur CO2 : `settings.co2_kg_per_kwh` (0,052, hypothèse à confirmer).
@@ -255,6 +264,15 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - Plus tard : Data Connect (consentement de chaque participant, courbes en J+1), en transition vers
   « Data Connect 2026 » ; planification nocturne (worker).
 
-**Sprints suivants** : facturation et paiements → pilote.
+**Sprint 5 — en cours** : facturation (sans Enedis réel ni prestataire de paiement).
+- [x] Backend : table `statements` (+ compteur de numérotation), calcul des brouillons du mois,
+      émission, `/admin/billing/run|issue|statements`, `/me/statements`, `/statements/{id}` ;
+      couverture 100 % (CI : `app.allocation` et `app.billing` ≥ 90 %)
+- [ ] Factures et relevés en PDF (PAY-03)
+- [ ] App : historique et détail des relevés ; back-office : lancer, vérifier, émettre la facturation
+- [ ] Paiements (PAY-01, 02, 04, 05) : bloqués sans compte Mangopay / Stripe Connect
+- Plus tard : avoirs (correction d'un relevé émis), historique des tarifs (TAR-03), planification.
+
+**Sprints suivants** : pilote.
 
 **Plus tard** : vérification de l'e-mail, révocation des jetons.
