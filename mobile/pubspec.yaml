@@ -39,6 +39,8 @@ dependencies:
   # Client de l'API généré depuis openapi.json : ne pas modifier, relancer scripts/gen_client.sh
   sunshare_api:
     path: packages/sunshare_api
+  flutter_secure_storage: ^11.2.0
+  go_router: ^18.1.1
 
 dev_dependencies:
   flutter_test:

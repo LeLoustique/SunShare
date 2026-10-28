@@ -28,7 +28,7 @@ Cahier des charges complet : https://claude.ai/code/artifact/c29d0cf5-0e33-44ba-
 
 | Couche | Choix |
 | --- | --- |
-| Mobile | Flutter (Dart), Riverpod, dio ; go_router et fl_chart à venir |
+| Mobile | Flutter (Dart), Riverpod 3, dio, go_router, flutter_secure_storage ; fl_chart à venir |
 | Backend | Python **3.12**, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic |
 | Base | PostgreSQL 16 + PostGIS + TimescaleDB (image `timescale/timescaledb-ha:pg16`) |
 | Auth | JWT (pyjwt, HS256) : accès 15 min + rafraîchissement 30 j ; mots de passe Argon2 (pwdlib) |
@@ -65,9 +65,13 @@ SunShare/
 │   ├── scripts/export_openapi.py
 │   └── tests/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
-    ├── lib/main.dart       # écran qui appelle /health via le client généré
+    ├── lib/
+    │   ├── main.dart       # MaterialApp.router
+    │   ├── router.dart     # go_router : redirection selon l'état de connexion
+    │   ├── core/           # api.dart (dio + client), auth_interceptor.dart, token_storage.dart, api_errors.dart
+    │   └── features/       # auth/ (repository, contrôleur, écrans), profile/, health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
-    └── test/widget_test.dart
+    └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
 
 ## Commandes
@@ -120,7 +124,10 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - `operationId` = nom de la fonction Python (`login`, `read_me`…) → méthodes du client Dart ; les
   `tags` donnent les classes (`AuthApi`, `ProfilApi`…). Toujours un `response_model` sur les routes.
 - Client généré en mode `built_value` (le mode json_serializable envoie un formulaire vide à `login`).
-  Jeton : `api.setOAuthToken('OAuth2PasswordBearer', accessToken)`.
+- Mobile : le jeton est ajouté par `AuthInterceptor` (routes dont `extra['secure']` est non vide),
+  qui rafraîchit sur 401 et rejoue une fois. Ne pas utiliser `setOAuthToken` du client généré.
+- Mobile : l'écran ne navigue pas après connexion / déconnexion ; il change l'état
+  d'`authControllerProvider` et `router.dart` redirige. Tests : surcharger `authRepositoryProvider`.
 - Identifiants UUID générés par la base (`gen_random_uuid()`), horodatages `timestamptz` en UTC.
 - E-mails stockés en minuscules.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
@@ -137,7 +144,7 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - [x] Backend : `/auth/register`, `/auth/login`, `/auth/refresh`, `/me` + tests (à vérifier : `pytest`
       doit afficher 10 passed, CI avec `JWT_SECRET`)
 - [x] Générer le client Dart depuis l'OpenAPI (`scripts/gen_client.sh`, testé de bout en bout)
-- [ ] Écrans Flutter : inscription, connexion, stockage des jetons (`flutter_secure_storage`),
+- [x] Écrans Flutter : inscription, connexion, stockage des jetons (`flutter_secure_storage`),
       rafraîchissement automatique, écran profil
 - [ ] Ajout d'un compteur : adresse géocodée (Base Adresse Nationale) + PRM (14 chiffres)
 

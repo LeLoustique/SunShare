@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:sunshare/main.dart';
+import 'package:sunshare/features/health/health_screen.dart';
 import 'package:sunshare_api/sunshare_api.dart';
 
 void main() {
@@ -14,7 +15,7 @@ void main() {
               ..extensions.addAll({'postgis': '3.5'})),
           ),
         ],
-        child: const SunShareApp(),
+        child: const MaterialApp(home: HealthScreen()),
       ),
     );
     await tester.pumpAndSettle();
