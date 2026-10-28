@@ -5,3 +5,7 @@ psycopg[binary]
 pydantic-settings
 alembic
 geoalchemy2
+pyjwt
+pwdlib[argon2]
+pydantic[email]
+python-multipart

@@ -31,6 +31,7 @@ jobs:
     env:
       DATABASE_URL: postgresql+psycopg://sunshare:ci-password@127.0.0.1:5432/sunshare
       PGPASSWORD: ci-password
+      JWT_SECRET: ci-secret-uniquement-pour-les-tests-0123456789
 
     steps:
       - uses: actions/checkout@v4
