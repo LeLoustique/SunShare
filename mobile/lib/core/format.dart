@@ -33,3 +33,24 @@ String formatPrice(String eurPerKwh) {
   decimals = decimals.padRight(2, '0');
   return '${parts[0]},$decimals €/kWh';
 }
+
+final _eurPerKwhInput = RegExp(r'^(\d)(?:[.,](\d{1,4}))?$');
+
+/// Tarif saisi (« 0,18 », « 0.165 ») → chaîne décimale exacte pour l'API (« 0.18 »), ou null si le
+/// format est invalide (moins de 10 €, 4 décimales au plus, comme le serveur).
+String? parseEurPerKwh(String input) {
+  final match = _eurPerKwhInput.firstMatch(input.trim());
+  if (match == null) return null;
+  final decimals = match.group(2);
+  return decimals == null ? match.group(1)! : '${match.group(1)}.$decimals';
+}
+
+/// Tarif en dix-millièmes d'euro (entier exact) pour comparer deux tarifs sans flottant.
+int eurPerKwhUnits(String eurPerKwh) {
+  final parts = eurPerKwh.split('.');
+  final decimals = (parts.length > 1 ? parts[1] : '').padRight(4, '0');
+  return int.parse(parts[0]) * 10000 + int.parse(decimals);
+}
+
+/// Saisie d'un tarif existant dans un formulaire : « 0.1800 » → « 0,18 ».
+String priceInput(String eurPerKwh) => formatPrice(eurPerKwh).replaceAll(' €/kWh', '');

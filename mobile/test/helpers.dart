@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshare/core/token_storage.dart';
+import 'package:sunshare/features/admin/admin_repository.dart';
 import 'package:sunshare/features/auth/auth_repository.dart';
 import 'package:sunshare/features/loops/loops_repository.dart';
 import 'package:sunshare/features/meters/meters_repository.dart';
@@ -50,6 +51,7 @@ Future<void> pumpApp(
   required FakeAuthRepository auth,
   FakeMetersRepository? meters,
   FakeLoopsRepository? loops,
+  FakeAdminRepository? admin,
 }) async {
   // Écran assez haut pour que les formulaires tiennent sans défilement
   tester.view.physicalSize = const Size(1000, 2000);
@@ -62,6 +64,7 @@ Future<void> pumpApp(
       authRepositoryProvider.overrideWithValue(auth),
       metersRepositoryProvider.overrideWithValue(metersRepository),
       loopsRepositoryProvider.overrideWithValue(loops ?? FakeLoopsRepository(metersRepository)),
+      adminRepositoryProvider.overrideWithValue(admin ?? FakeAdminRepository()),
     ],
     child: const SunShareApp(),
   ));
@@ -286,4 +289,110 @@ class FakeLoopsRepository implements LoopsRepository {
   @override
   Future<void> cancel(String membershipId) async =>
       membershipList.removeWhere((m) => m.id == membershipId);
+}
+
+AdminLoopOut adminLoop({
+  String id = 'boucle-1',
+  String name = 'Saint-Leu',
+  String price = '0.1800',
+  String commission = '0.0200',
+  int pendingCount = 0,
+  LoopStatus? status,
+}) =>
+    AdminLoopOut((b) => b
+      ..id = id
+      ..name = name
+      ..perimeterKm = 2
+      ..priceEurKwh = price
+      ..commissionEurKwh = commission
+      ..status = status ?? LoopStatus.open
+      ..allocationMode = AllocationMode.dynamicDefault
+      ..pendingCount = pendingCount
+      ..createdAt = DateTime.utc(2026, 10, 28)
+      ..stats.memberCount = 0
+      ..stats.producerCount = 0
+      ..stats.consumerCount = 0
+      ..stats.totalPeakKw = 0
+      ..stats.diameterKm = 0);
+
+AdminMemberOut adminMember({
+  required String id,
+  String loopId = 'boucle-1',
+  String firstName = 'Alex',
+  String lastName = 'Durand',
+  MembershipStatus? status,
+}) =>
+    AdminMemberOut((b) => b
+      ..id = id
+      ..loopId = loopId
+      ..loopName = 'Saint-Leu'
+      ..meterId = 'compteur-$id'
+      ..prm = '12345678901234'
+      ..direction = MeterDirection.consumption
+      ..status = status ?? MembershipStatus.pending
+      ..requestedAt = DateTime.utc(2026, 10, 28)
+      ..firstName = firstName
+      ..lastName = lastName
+      ..email = '${firstName.toLowerCase()}@exemple.fr'
+      ..address = amiens.label);
+
+/// Simule /admin/loops : garde les boucles et les adhésions en mémoire.
+class FakeAdminRepository implements AdminRepository {
+  FakeAdminRepository({List<AdminLoopOut>? loops, List<AdminMemberOut>? members})
+      : loopList = loops ?? [],
+        memberList = members ?? [];
+
+  final List<AdminLoopOut> loopList;
+  final List<AdminMemberOut> memberList;
+  final approvals = <String, Date>{};
+
+  @override
+  Future<List<AdminLoopOut>> loops() async => List.of(loopList);
+
+  @override
+  Future<AdminLoopOut> create(LoopCreate loop) async {
+    final created = adminLoop(
+      id: 'boucle-${loopList.length + 1}',
+      name: loop.name,
+      price: loop.priceEurKwh,
+      commission: loop.commissionEurKwh,
+    ).rebuild((b) => b..perimeterKm = loop.perimeterKm ?? 2);
+    loopList.add(created);
+    return created;
+  }
+
+  @override
+  Future<AdminLoopOut> update(String loopId, LoopUpdate changes) async {
+    final index = loopList.indexWhere((l) => l.id == loopId);
+    final updated = loopList[index].rebuild((b) {
+      if (changes.name != null) b.name = changes.name;
+      if (changes.priceEurKwh != null) b.priceEurKwh = changes.priceEurKwh;
+      if (changes.commissionEurKwh != null) b.commissionEurKwh = changes.commissionEurKwh;
+      if (changes.status != null) b.status = changes.status;
+    });
+    loopList[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<List<AdminMemberOut>> members(String loopId) async =>
+      memberList.where((m) => m.loopId == loopId).toList();
+
+  AdminMemberOut _setStatus(String memberId, MembershipStatus status, {Date? joinedAt}) {
+    final index = memberList.indexWhere((m) => m.id == memberId);
+    memberList[index] = memberList[index].rebuild((b) => b
+      ..status = status
+      ..joinedAt = joinedAt);
+    return memberList[index];
+  }
+
+  @override
+  Future<AdminMemberOut> approve(String loopId, String memberId, Date joinedAt) async {
+    approvals[memberId] = joinedAt;
+    return _setStatus(memberId, MembershipStatus.active, joinedAt: joinedAt);
+  }
+
+  @override
+  Future<AdminMemberOut> reject(String loopId, String memberId) async =>
+      _setStatus(memberId, MembershipStatus.rejected);
 }

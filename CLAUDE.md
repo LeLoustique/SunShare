@@ -28,7 +28,7 @@ Cahier des charges complet : https://claude.ai/code/artifact/c29d0cf5-0e33-44ba-
 
 | Couche | Choix |
 | --- | --- |
-| Mobile | Flutter (Dart), Riverpod 3, dio, go_router, flutter_secure_storage ; fl_chart à venir |
+| Mobile + back-office web | Flutter (Dart), Riverpod 3, dio, go_router, flutter_secure_storage, flutter_localizations (fr) ; fl_chart à venir |
 | Backend | Python **3.12**, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic |
 | Base | PostgreSQL 16 + PostGIS + TimescaleDB (image `timescale/timescaledb-ha:pg16`) |
 | Auth | JWT (pyjwt, HS256) : accès 15 min + rafraîchissement 30 j ; mots de passe Argon2 (pwdlib) |
@@ -72,7 +72,7 @@ SunShare/
     │   ├── main.dart       # MaterialApp.router
     │   ├── router.dart     # go_router : redirection selon la connexion ; onglets (StatefulShellRoute)
     │   ├── core/           # api, auth_interceptor, token_storage, api_errors, format (dates, €/kWh, km)
-    │   └── features/       # auth/, home/ (barre d'onglets), loops/ (« Ma boucle »), profile/, meters/, health/
+    │   └── features/       # auth/, home/ (onglets), loops/ (« Ma boucle »), admin/ (back-office), profile/, meters/, health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
@@ -132,7 +132,11 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   qui rafraîchit sur 401 et rejoue une fois. Ne pas utiliser `setOAuthToken` du client généré.
 - Mobile : l'écran ne navigue pas après connexion / déconnexion ; il change l'état
   d'`authControllerProvider` et `router.dart` redirige. Accueil de l'utilisateur connecté :
-  onglet « Ma boucle » (`/boucle`), puis « Profil » (`/profil`).
+  onglet « Ma boucle » (`/boucle`), puis « Profil » (`/profil`). L'administrateur a l'onglet
+  « Boucles » (`/admin/boucles`, back-office) à la place de « Ma boucle » ; `/admin/*` redirige les
+  autres rôles (le serveur répond 403 de toute façon).
+- Back-office : même application Flutter (cible web pour la PMO). Tarifs saisis convertis par
+  `parseEurPerKwh` (« 0,18 » → « 0.18 ») et comparés par `eurPerKwhUnits` (entiers), sans `double`.
 - Tests Flutter : `pumpApp` (test/helpers.dart) lance l'app complète sur des dépôts simulés
   (`FakeAuthRepository`, `FakeMetersRepository`, `FakeLoopsRepository`) ; `goToProfile` ouvre l'onglet.
 - Mobile : tarifs affichés avec `formatPrice`, qui travaille sur la chaîne (« 0.1800 » → « 0,18 €/kWh »),
@@ -177,13 +181,16 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 
 **Sprint 1 — terminé.**
 
-**Sprint 2 — en cours** : boucles et contrôle du périmètre (exigences LOOP-01 à 04).
+**Sprint 2** : boucles et contrôle du périmètre (exigences LOOP-01 à 04).
 - [x] Backend : tables `loops` / `loop_members`, `/loops/available`, `/loops/{id}/join` (409 hors
       périmètre), `/loops/{id}`, `/me/memberships`, `/admin/loops` (création, modification,
       membres, validation avec date d'entrée, refus) + tests
 - [x] Mobile utilisateur : onglets « Ma boucle » / « Profil », boucles disponibles, demande
       d'adhésion (tous les compteurs compatibles), annulation, détail agrégé de la boucle
-- [ ] Back-office administrateur (Flutter web) : boucles, validation des adhésions
+- [x] Back-office administrateur (même app Flutter, onglet « Boucles ») : liste, création et
+      modification d'une boucle, validation des demandes avec date d'entrée, refus
+
+**Sprint 2 — terminé.**
 - Reporté : consentement Enedis obligatoire avant l'adhésion (sprint Enedis), sortie d'un membre
   avec préavis (LOOP-05, P2), carte des participants aux positions floues.
 
