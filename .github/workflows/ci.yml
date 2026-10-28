@@ -54,8 +54,9 @@ jobs:
       - name: Migrations
         run: alembic upgrade head
 
+      # Cahier des charges : couverture > 90 % du moteur de répartition (puis de la tarification)
       - name: Tests
-        run: pytest -v
+        run: pytest -v --cov=app.allocation --cov-report=term-missing --cov-fail-under=90
 
       # openapi.json (et donc le client Dart) doit refléter le code : sinon lancer scripts/gen_client.sh
       - name: Schéma OpenAPI à jour

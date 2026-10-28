@@ -61,11 +61,14 @@ SunShare/
 │   │   ├── geocoding.py    # Base Adresse Nationale (Géoplateforme IGN) ; dépendance get_geocoder
 │   │   ├── perimeter.py    # contrôle du périmètre (ST_Distance, marge de 50 m)
 │   │   ├── loop_service.py # statistiques et conversions partagées des boucles
+│   │   ├── allocation.py   # moteur de répartition (fonctions pures, Decimal, couverture ≥ 90 %)
+│   │   ├── simulation.py   # courbes de charge simulées (déterministes, journées françaises)
+│   │   ├── jobs.py         # traitement d'une journée : courbes simulées puis répartition
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
 │   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin (/admin/loops)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
-│   ├── scripts/            # export_openapi.py, promote_admin.py
+│   ├── scripts/            # export_openapi.py, promote_admin.py, simulate.py
 │   └── tests/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
     ├── lib/
@@ -93,6 +96,7 @@ pytest -v                               # tests : base sunshare_test recréée �
 alembic revision --autogenerate -m "..."  # nouvelle migration : TOUJOURS relire le fichier avant upgrade
 alembic upgrade head
 python scripts/promote_admin.py e-mail  # donne le rôle admin (PMO) : il ne se choisit pas à l'inscription
+python scripts/simulate.py --du 2026-10-01 --au 2026-10-27   # courbes simulées + répartition (défaut : hier)
 
 # Client Dart : à relancer après toute modification d'une route ou d'un schéma Pydantic
 ./scripts/gen_client.sh                 # (Docker requis) ; la CI échoue si openapi.json est périmé
@@ -160,6 +164,15 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
 - Tarifs (`EurPerKwh`) : `Decimal` en Python, `numeric(6,4)` en base, **chaîne** dans le JSON
   (`"0.1800"`), donc `String` côté Dart. Les grandeurs physiques (kWc, km) sont des nombres JSON.
 - Les membres d'une boucle ne voient que des statistiques agrégées, jamais les autres membres.
+- Courbes et répartitions : hypertables TimescaleDB `load_curves` (kW moyen sur 30 min, 3 décimales)
+  et `allocations` (kWh par paire producteur → consommateur, 6 décimales, arrondi **vers le bas**
+  pour ne jamais affecter plus que produit ou consommé). Colonne `source` : `simulated` ou `enedis` ;
+  une courbe Enedis n'est jamais remplacée par une simulée, et seules les données Enedis facturent.
+- Une « journée » va de minuit à minuit heure de Paris (`day_steps`) : 48 pas, 46 ou 50 aux
+  changements d'heure. Ne participent que les membres actifs dont la date d'entrée est passée.
+- Clés de répartition prises en charge : `dynamic_default` (§8.2) et `static` (k_i × P plafonné à
+  C_i) ; `dynamic_custom` lève `NotImplementedError` et la boucle est ignorée par le traitement.
+- `tzdata` est requis (Windows n'a pas de base de fuseaux horaires pour `zoneinfo`).
 - Générateur dart-dio : pas de valeur par défaut de type enum dans un schéma d'entrée (le code
   généré ne compile pas) ; rendre le champ optionnel et appliquer le défaut côté serveur.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
@@ -194,7 +207,15 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - Reporté : consentement Enedis obligatoire avant l'adhésion (sprint Enedis), sortie d'un membre
   avec préavis (LOOP-05, P2), carte des participants aux positions floues.
 
-**Sprints suivants** : courbes simulées et moteur de répartition → intégration Enedis (sandbox Data
-Connect) → facturation et paiements → pilote.
+**Sprint 3 — en cours** : courbes simulées et moteur de répartition (REP-01, REP-02, DASH-01/02).
+- [x] Backend : hypertables `load_curves` / `allocations`, moteur de répartition (100 % couvert),
+      générateur de courbes, traitement par jour (`scripts/simulate.py`) ; mesuré : 0,34 s par jour
+      pour une boucle de 50 compteurs
+- [ ] API : `/me/curves?date=` (48 pas : production, consommation, part locale) et
+      `/me/dashboard?period=` (kWh partagés, montant estimé, CO2 évité, taux d'autoconsommation)
+- [ ] Mobile : onglet tableau de bord (vue jour avec fl_chart, vue mois)
+- Plus tard : planification automatique (APScheduler, worker séparé) avec la collecte Enedis.
+
+**Sprints suivants** : intégration Enedis (sandbox Data Connect) → facturation et paiements → pilote.
 
 **Plus tard** : vérification de l'e-mail, révocation des jetons.

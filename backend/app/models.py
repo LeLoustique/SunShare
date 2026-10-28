@@ -56,6 +56,13 @@ class MembershipStatus(str, enum.Enum):
     left = "left"
 
 
+class DataSource(str, enum.Enum):
+    """Origine d'une mesure ou d'une répartition : seules les données Enedis servent à facturer."""
+
+    enedis = "enedis"
+    simulated = "simulated"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -152,3 +159,39 @@ class LoopMember(Base):
 
     loop: Mapped[Loop] = relationship(back_populates="members")
     meter: Mapped[Meter] = relationship()
+
+
+class LoadCurve(Base):
+    """Courbe de charge : puissance moyenne d'un compteur sur un pas de 30 min.
+
+    Hypertable TimescaleDB (17 520 points par compteur et par an). Données personnelles
+    sensibles : elles révèlent la présence au domicile.
+    """
+
+    __tablename__ = "load_curves"
+
+    meter_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("meters.id", ondelete="CASCADE"), primary_key=True
+    )
+    # Début du pas de 30 min, en UTC
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
+    # Puissance moyenne en kW sur le pas (énergie : kWh = kW × 0,5)
+    kw_avg: Mapped[Decimal] = mapped_column(Numeric(8, 3))
+    source: Mapped[DataSource] = mapped_column(Enum(DataSource, name="data_source"))
+
+
+class Allocation(Base):
+    """Énergie affectée d'un producteur à un consommateur sur un pas de 30 min (hypertable).
+
+    6 décimales : les sommes mensuelles restent exactes, l'arrondi au centime se fait une seule
+    fois, sur le montant mensuel.
+    """
+
+    __tablename__ = "allocations"
+
+    loop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("loops.id"), primary_key=True)
+    ts: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
+    producer_meter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("meters.id"), primary_key=True)
+    consumer_meter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("meters.id"), primary_key=True)
+    source: Mapped[DataSource] = mapped_column(Enum(DataSource, name="data_source"), primary_key=True)
+    kwh: Mapped[Decimal] = mapped_column(Numeric(14, 6))
