@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sunshare/core/token_storage.dart';
 import 'package:sunshare/features/admin/admin_repository.dart';
 import 'package:sunshare/features/auth/auth_repository.dart';
+import 'package:sunshare/features/dashboard/dashboard_repository.dart';
 import 'package:sunshare/features/loops/loops_repository.dart';
 import 'package:sunshare/features/meters/meters_repository.dart';
 import 'package:sunshare/main.dart';
@@ -52,6 +53,7 @@ Future<void> pumpApp(
   FakeMetersRepository? meters,
   FakeLoopsRepository? loops,
   FakeAdminRepository? admin,
+  FakeDashboardRepository? dashboard,
 }) async {
   // Écran assez haut pour que les formulaires tiennent sans défilement
   tester.view.physicalSize = const Size(1000, 2000);
@@ -65,15 +67,22 @@ Future<void> pumpApp(
       metersRepositoryProvider.overrideWithValue(metersRepository),
       loopsRepositoryProvider.overrideWithValue(loops ?? FakeLoopsRepository(metersRepository)),
       adminRepositoryProvider.overrideWithValue(admin ?? FakeAdminRepository()),
+      dashboardRepositoryProvider.overrideWithValue(dashboard ?? FakeDashboardRepository()),
     ],
     child: const SunShareApp(),
   ));
   await tester.pumpAndSettle();
 }
 
-/// L'accueil est « Ma boucle » : ouvre l'onglet Profil.
+/// L'accueil est le tableau de bord : ouvre l'onglet Profil.
 Future<void> goToProfile(WidgetTester tester) async {
   await tester.tap(find.text('Profil'));
+  await tester.pumpAndSettle();
+}
+
+/// Ouvre l'onglet « Ma boucle ».
+Future<void> goToLoop(WidgetTester tester) async {
+  await tester.tap(find.text('Ma boucle'));
   await tester.pumpAndSettle();
 }
 
@@ -396,3 +405,30 @@ class FakeAdminRepository implements AdminRepository {
   Future<AdminMemberOut> reject(String loopId, String memberId) async =>
       _setStatus(memberId, MembershipStatus.rejected);
 }
+
+/// Simule /me/dashboard et /me/curves : par défaut, un utilisateur sans compteur ni données.
+class FakeDashboardRepository implements DashboardRepository {
+  FakeDashboardRepository({this.monthData, this.dayData});
+
+  final Dashboard? monthData;
+  final DayCurves? dayData;
+  final requestedPeriods = <String>[];
+  final requestedDays = <Date>[];
+
+  @override
+  Future<Dashboard> month(String period) async {
+    requestedPeriods.add(period);
+    return (monthData ?? emptyDashboard()).rebuild((b) => b..period = period);
+  }
+
+  @override
+  Future<DayCurves> day(Date day) async {
+    requestedDays.add(day);
+    return (dayData ?? DayCurves((b) => b..day = day)).rebuild((b) => b..day = day);
+  }
+}
+
+Dashboard emptyDashboard() => Dashboard((b) => b
+  ..period = '2026-10'
+  ..co2AvoidedKg = 0
+  ..co2KgPerKwh = 0.052);

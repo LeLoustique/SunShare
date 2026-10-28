@@ -22,7 +22,7 @@ void main() {
 
   testWidgets('avec une session enregistrée, ouvre directement l’accueil', (tester) async {
     await startApp(tester, loggedIn: true);
-    expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Tableau de bord'), findsOneWidget);
 
     await goToProfile(tester);
     expect(find.text('Mon profil'), findsOneWidget);
@@ -39,7 +39,7 @@ void main() {
     await tester.tap(find.text('Se connecter'));
     await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Tableau de bord'), findsOneWidget);
     await goToProfile(tester);
     expect(find.text('camille@exemple.fr'), findsOneWidget);
   });

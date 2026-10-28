@@ -29,6 +29,7 @@ Future<FakeLoopsRepository> openLoopTab(
     meters: metersRepository,
     loops: loops,
   );
+  await goToLoop(tester);
   return loops;
 }
 
@@ -160,9 +161,11 @@ void main() {
 
     await goToProfile(tester);
     expect(find.text('Mon profil'), findsOneWidget);
-    await tester.tap(find.text('Ma boucle'));
-    await tester.pumpAndSettle();
+    await goToLoop(tester);
     expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
+    await tester.tap(find.text('Tableau de bord'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'Tableau de bord'), findsOneWidget);
   });
 
   group('formats', () {

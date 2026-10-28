@@ -10,6 +10,7 @@ import 'features/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/register_screen.dart';
 import 'features/auth/startup_screen.dart';
+import 'features/dashboard/dashboard_screen.dart';
 import 'features/health/health_screen.dart';
 import 'features/home/home_shell.dart';
 import 'features/loops/loop_screen.dart';
@@ -18,14 +19,16 @@ import 'features/profile/profile_screen.dart';
 
 const _guestRoutes = {'/connexion', '/inscription'};
 
-/// Écran d'accueil de l'utilisateur connecté
-const homeRoute = '/boucle';
+/// Écran d'accueil de l'utilisateur connecté : son tableau de bord
+const homeRoute = '/accueil';
+const loopRoute = '/boucle';
 
 /// Écran d'accueil de l'administrateur (back-office)
 const adminHomeRoute = '/admin/boucles';
 
 /// Redirige selon l'état de connexion et le rôle : un visiteur ne voit que la connexion et
-/// l'inscription ; seul l'administrateur accède à /admin, qui remplace pour lui « Ma boucle ».
+/// l'inscription ; seul l'administrateur accède à /admin, qui remplace pour lui le tableau de bord
+/// et « Ma boucle ».
 /// Le serveur refuse de toute façon les routes admin aux autres (403).
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ValueNotifier<AsyncValue<UserOut?>>(ref.read(authControllerProvider));
@@ -48,7 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAdmin = user.role == UserRole.admin;
       final home = isAdmin ? adminHomeRoute : homeRoute;
       if (_guestRoutes.contains(location) || location == '/demarrage') return home;
-      if (isAdmin && location == homeRoute) return adminHomeRoute;
+      if (isAdmin && (location == homeRoute || location == loopRoute)) return adminHomeRoute;
       if (!isAdmin && location.startsWith('/admin')) return homeRoute;
       return null;
     },
@@ -56,12 +59,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/demarrage', builder: (_, _) => const StartupScreen()),
       GoRoute(path: '/connexion', builder: (_, _) => const LoginScreen()),
       GoRoute(path: '/inscription', builder: (_, _) => const RegisterScreen()),
-      // Branches dans l'ordre de loopBranch, adminBranch, profileBranch (home_shell.dart)
+      // Branches dans l'ordre de dashboardBranch, loopBranch, adminBranch, profileBranch (home_shell.dart)
       StatefulShellRoute.indexedStack(
         builder: (_, _, shell) => HomeShell(shell: shell),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: homeRoute, builder: (_, _) => const LoopScreen()),
+            GoRoute(path: homeRoute, builder: (_, _) => const DashboardScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: loopRoute, builder: (_, _) => const LoopScreen()),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(

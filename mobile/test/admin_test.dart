@@ -24,11 +24,12 @@ Future<void> openLoop(WidgetTester tester, String name) async {
 }
 
 void main() {
-  testWidgets('l’administrateur arrive sur le back-office, sans « Ma boucle »', (tester) async {
+  testWidgets('l’administrateur arrive sur le back-office, sans les onglets utilisateur', (tester) async {
     await openBackOffice(tester);
 
     expect(find.widgetWithText(AppBar, 'Boucles'), findsOneWidget);
     expect(find.text('Ma boucle'), findsNothing);
+    expect(find.text('Tableau de bord'), findsNothing);
     expect(find.textContaining('Aucune boucle pour le moment'), findsOneWidget);
   });
 
@@ -36,7 +37,7 @@ void main() {
     await pumpApp(tester, auth: FakeAuthRepository(loggedIn: true));
 
     expect(find.text('Boucles'), findsNothing);
-    expect(find.widgetWithText(AppBar, 'Ma boucle'), findsOneWidget);
+    expect(find.widgetWithText(AppBar, 'Tableau de bord'), findsOneWidget);
   });
 
   testWidgets('liste : statut, demandes en attente, tarif et commission', (tester) async {

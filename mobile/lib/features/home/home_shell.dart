@@ -6,13 +6,14 @@ import 'package:sunshare_api/sunshare_api.dart';
 import '../auth/auth_controller.dart';
 
 /// Branches du StatefulShellRoute (voir router.dart), dans l'ordre de déclaration.
-const loopBranch = 0;
-const adminBranch = 1;
-const profileBranch = 2;
+const dashboardBranch = 0;
+const loopBranch = 1;
+const adminBranch = 2;
+const profileBranch = 3;
 
 /// Écrans principaux de l'utilisateur connecté, avec la barre de navigation du bas.
 /// Chaque onglet garde son état (défilement…) quand on passe à l'autre. L'administrateur a
-/// l'onglet « Boucles » (back-office) à la place de « Ma boucle ».
+/// l'onglet « Boucles » (back-office) à la place du tableau de bord et de « Ma boucle ».
 class HomeShell extends ConsumerWidget {
   const HomeShell({super.key, required this.shell});
 
@@ -21,7 +22,9 @@ class HomeShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isAdmin = ref.watch(authControllerProvider).value?.role == UserRole.admin;
-    final branches = [isAdmin ? adminBranch : loopBranch, profileBranch];
+    final branches = isAdmin
+        ? [adminBranch, profileBranch]
+        : [dashboardBranch, loopBranch, profileBranch];
     final selected = branches.indexOf(shell.currentIndex);
 
     return Scaffold(
@@ -40,12 +43,18 @@ class HomeShell extends ConsumerWidget {
               selectedIcon: Icon(Icons.admin_panel_settings),
               label: 'Boucles',
             )
-          else
-            const NavigationDestination(
+          else ...const [
+            NavigationDestination(
+              icon: Icon(Icons.insights_outlined),
+              selectedIcon: Icon(Icons.insights),
+              label: 'Tableau de bord',
+            ),
+            NavigationDestination(
               icon: Icon(Icons.hub_outlined),
               selectedIcon: Icon(Icons.hub),
               label: 'Ma boucle',
             ),
+          ],
           const NavigationDestination(
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),

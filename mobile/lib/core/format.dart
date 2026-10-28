@@ -54,3 +54,23 @@ int eurPerKwhUnits(String eurPerKwh) {
 
 /// Saisie d'un tarif existant dans un formulaire : « 0.1800 » → « 0,18 ».
 String priceInput(String eurPerKwh) => formatPrice(eurPerKwh).replaceAll(' €/kWh', '');
+
+/// Montant reçu en chaîne exacte (« 25.65 ») → « 25,65 € », sans passer par un flottant.
+String formatEuros(String amount) => '${amount.replaceAll('.', ',')} €';
+
+/// Énergie d'un total (mois, journée) : « 142,5 kWh », au dixième.
+String formatKwh(num kwh) => '${_number((kwh * 10).round() / 10)} kWh';
+
+/// Taux entre 0 et 1 → « 63 % » (espace insécable avant %).
+String formatPercent(num rate) => '${(rate * 100).round()} %';
+
+const _months = [
+  'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+  'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+];
+
+/// « octobre 2026 »
+String formatMonth(int year, int month) => '${_months[month - 1]} $year';
+
+/// « 2026-10 », format du paramètre `period` de l'API.
+String periodOf(int year, int month) => '$year-${_two(month)}';

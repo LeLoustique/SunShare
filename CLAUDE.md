@@ -28,7 +28,7 @@ Cahier des charges complet : https://claude.ai/code/artifact/c29d0cf5-0e33-44ba-
 
 | Couche | Choix |
 | --- | --- |
-| Mobile + back-office web | Flutter (Dart), Riverpod 3, dio, go_router, flutter_secure_storage, flutter_localizations (fr) ; fl_chart à venir |
+| Mobile + back-office web | Flutter (Dart), Riverpod 3, dio, go_router, flutter_secure_storage, flutter_localizations (fr), fl_chart |
 | Backend | Python **3.12**, FastAPI, Pydantic v2, SQLAlchemy 2, Alembic |
 | Base | PostgreSQL 16 + PostGIS + TimescaleDB (image `timescale/timescaledb-ha:pg16`) |
 | Auth | JWT (pyjwt, HS256) : accès 15 min + rafraîchissement 30 j ; mots de passe Argon2 (pwdlib) |
@@ -77,7 +77,7 @@ SunShare/
     │   ├── main.dart       # MaterialApp.router
     │   ├── router.dart     # go_router : redirection selon la connexion ; onglets (StatefulShellRoute)
     │   ├── core/           # api, auth_interceptor, token_storage, api_errors, format (dates, €/kWh, km)
-    │   └── features/       # auth/, home/ (onglets), loops/ (« Ma boucle »), admin/ (back-office), profile/, meters/, health/
+    │   └── features/       # auth/, home/ (onglets), dashboard/, loops/ (« Ma boucle »), admin/ (back-office), profile/, meters/, health/
     ├── packages/sunshare_api/  # client dart-dio GÉNÉRÉ (built_value) : ne jamais modifier à la main
     └── test/               # helpers.dart (faux repository, stockage en mémoire), parcours auth, intercepteur
 ```
@@ -138,15 +138,17 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   qui rafraîchit sur 401 et rejoue une fois. Ne pas utiliser `setOAuthToken` du client généré.
 - Mobile : l'écran ne navigue pas après connexion / déconnexion ; il change l'état
   d'`authControllerProvider` et `router.dart` redirige. Accueil de l'utilisateur connecté :
-  onglet « Ma boucle » (`/boucle`), puis « Profil » (`/profil`). L'administrateur a l'onglet
-  « Boucles » (`/admin/boucles`, back-office) à la place de « Ma boucle » ; `/admin/*` redirige les
-  autres rôles (le serveur répond 403 de toute façon).
+  « Tableau de bord » (`/accueil`), puis « Ma boucle » (`/boucle`) et « Profil » (`/profil`).
+  L'administrateur a l'onglet « Boucles » (`/admin/boucles`, back-office) à la place des deux
+  premiers ; `/admin/*` redirige les autres rôles (le serveur répond 403 de toute façon).
 - Back-office : même application Flutter (cible web pour la PMO). Tarifs saisis convertis par
   `parseEurPerKwh` (« 0,18 » → « 0.18 ») et comparés par `eurPerKwhUnits` (entiers), sans `double`.
 - Tests Flutter : `pumpApp` (test/helpers.dart) lance l'app complète sur des dépôts simulés
   (`FakeAuthRepository`, `FakeMetersRepository`, `FakeLoopsRepository`) ; `goToProfile` ouvre l'onglet.
-- Mobile : tarifs affichés avec `formatPrice`, qui travaille sur la chaîne (« 0.1800 » → « 0,18 €/kWh »),
-  jamais via un `double`.
+- Mobile : tarifs et montants affichés avec `formatPrice` / `formatEuros`, qui travaillent sur la
+  chaîne reçue (« 0.1800 » → « 0,18 €/kWh », « 25.65 » → « 25,65 € »), jamais via un `double`.
+- Tableau de bord : tant que `data_source` vaut `simulated`, l'app affiche un bandeau « Estimation »
+  et parle de montant « estimé » ; seules les données Enedis servent à facturer.
 - Identifiants UUID générés par la base (`gen_random_uuid()`), horodatages `timestamptz` en UTC.
 - E-mails stockés en minuscules.
 - Adresses : l'app propose les suggestions de `/addresses` ; à la création d'un compteur, le
@@ -215,13 +217,16 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - Reporté : consentement Enedis obligatoire avant l'adhésion (sprint Enedis), sortie d'un membre
   avec préavis (LOOP-05, P2), carte des participants aux positions floues.
 
-**Sprint 3 — en cours** : courbes simulées et moteur de répartition (REP-01, REP-02, DASH-01/02).
+**Sprint 3** : courbes simulées et moteur de répartition (REP-01, REP-02, DASH-01/02).
 - [x] Backend : hypertables `load_curves` / `allocations`, moteur de répartition (100 % couvert),
       générateur de courbes, traitement par jour (`scripts/simulate.py`) ; mesuré : 0,34 s par jour
       pour une boucle de 50 compteurs
 - [x] API : `/me/curves?date=` (pas de 30 min : production, consommation, énergie reçue / vendue)
       et `/me/dashboard?period=` (kWh, montant estimé, commission, CO2 évité, taux) + tests
-- [ ] Mobile : onglet tableau de bord (vue jour avec fl_chart, vue mois)
+- [x] Mobile : onglet « Tableau de bord » (accueil) : mois (énergie locale, taux, montant estimé,
+      revenu net, CO2) et journée (courbe fl_chart consommation / production / énergie locale)
+
+**Sprint 3 — terminé.**
 - Plus tard : planification automatique (APScheduler, worker séparé) avec la collecte Enedis.
 
 **Sprints suivants** : intégration Enedis (sandbox Data Connect) → facturation et paiements → pilote.
