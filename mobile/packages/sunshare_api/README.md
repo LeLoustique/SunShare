@@ -88,6 +88,7 @@ Class | Method | HTTP request | Description
 [*CompteursApi*](doc/CompteursApi.md) | [**createMeter**](doc/CompteursApi.md#createmeter) | **POST** /api/v1/meters | Create Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**deleteMeter**](doc/CompteursApi.md#deletemeter) | **DELETE** /api/v1/meters/{meter_id} | Delete Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**listMeters**](doc/CompteursApi.md#listmeters) | **GET** /api/v1/meters | List Meters
+[*FacturationApi*](doc/FacturationApi.md) | [**downloadStatementPdf**](doc/FacturationApi.md#downloadstatementpdf) | **GET** /api/v1/statements/{statement_id}/pdf | Download Statement Pdf
 [*FacturationApi*](doc/FacturationApi.md) | [**listMyStatements**](doc/FacturationApi.md#listmystatements) | **GET** /api/v1/me/statements | List My Statements
 [*FacturationApi*](doc/FacturationApi.md) | [**readStatement**](doc/FacturationApi.md#readstatement) | **GET** /api/v1/statements/{statement_id} | Read Statement
 [*ProfilApi*](doc/ProfilApi.md) | [**readMe**](doc/ProfilApi.md#readme) | **GET** /api/v1/me | Read Me

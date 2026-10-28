@@ -11,6 +11,7 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Index,
+    LargeBinary,
     Numeric,
     String,
     UniqueConstraint,
@@ -239,6 +240,9 @@ class Statement(Base):
     # Numéro de facture chronologique et sans trou, attribué à l'émission (SS-2026-000001)
     number: Mapped[str | None] = mapped_column(String(20), unique=True)
     issued_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # PDF archivé à l'émission : le document reste identique même si la mise en page évolue
+    # (chargé seulement sur demande)
+    pdf: Mapped[bytes | None] = mapped_column(LargeBinary, deferred=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     loop: Mapped[Loop] = relationship()

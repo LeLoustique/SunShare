@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     # TURPE sur la part autoconsommée, facturé au consommateur : en principe non collecté par la PMO,
     # 0 en attendant confirmation (cahier des charges §8.3)
     network_fee_eur_kwh: Decimal = Decimal(0)
+    # Émetteur des factures (la PMO) : à renseigner dans .env une fois la PMO immatriculée. Les
+    # valeurs par défaut s'impriment telles quelles pour qu'aucun document ne passe pour définitif.
+    pmo_name: str = "SunShare (PMO à immatriculer)"
+    pmo_address: str = "Adresse à compléter"
+    pmo_siren: str = "SIREN à compléter"
+    # Régime de TVA à confirmer (franchise en base, assujettissement…) : pas de mention inventée
+    pmo_vat_mention: str = "Mention de TVA à compléter"
     # Accès aux données Enedis de l'opération : « none » tant qu'il n'y a pas de convention PMO
     enedis_mode: str = "none"
 

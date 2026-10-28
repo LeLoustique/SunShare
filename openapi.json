@@ -1043,6 +1043,56 @@
         }
       }
     },
+    "/api/v1/statements/{statement_id}/pdf": {
+      "get": {
+        "tags": [
+          "facturation"
+        ],
+        "summary": "Download Statement Pdf",
+        "description": "PDF du relevé : celui archivé à l'émission, ou un aperçu « BROUILLON » pour l'administrateur.",
+        "operationId": "download_statement_pdf",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "statement_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Statement Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/admin/billing/run": {
       "post": {
         "tags": [

@@ -7,6 +7,15 @@ void main() {
   final instance = SunshareApi().getFacturationApi();
 
   group(FacturationApi, () {
+    // Download Statement Pdf
+    //
+    // PDF du relevé : celui archivé à l'émission, ou un aperçu « BROUILLON » pour l'administrateur.
+    //
+    //Future<Uint8List> downloadStatementPdf(String statementId) async
+    test('test downloadStatementPdf', () async {
+      // TODO
+    });
+
     // List My Statements
     //
     // Relevés émis de l'utilisateur, du plus récent au plus ancien (brouillons cachés).

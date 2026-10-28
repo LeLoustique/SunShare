@@ -1,10 +1,10 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, Response, status
 from sqlalchemy import select
 
-from app import billing
+from app import billing, statement_pdf
 from app.deps import AdminUser, CurrentUser, DbSession
 from app.models import Statement, StatementStatus, UserRole
 from app.schemas import AdminStatementOut, BillingRunOut, IssueOut, LoopBillingOut, StatementOut
@@ -94,8 +94,8 @@ def list_my_statements(user: CurrentUser, db: DbSession) -> list[StatementOut]:
     return [_out(s) for s in statements]
 
 
-@router.get("/statements/{statement_id}", response_model=StatementOut)
-def read_statement(statement_id: uuid.UUID, user: CurrentUser, db: DbSession) -> StatementOut:
+def _visible_statement(db, user, statement_id: uuid.UUID) -> Statement:
+    """Relevé émis de l'utilisateur ; l'administrateur voit tout, brouillons compris."""
     statement = db.get(Statement, statement_id)
     if statement is None:
         raise STATEMENT_NOT_FOUND
@@ -103,4 +103,25 @@ def read_statement(statement_id: uuid.UUID, user: CurrentUser, db: DbSession) ->
         statement.user_id != user.id or statement.status is not StatementStatus.issued
     ):
         raise STATEMENT_NOT_FOUND  # 404 : on ne confirme pas l'existence du relevé d'un autre
-    return _out(statement)
+    return statement
+
+
+@router.get("/statements/{statement_id}", response_model=StatementOut)
+def read_statement(statement_id: uuid.UUID, user: CurrentUser, db: DbSession) -> StatementOut:
+    return _out(_visible_statement(db, user, statement_id))
+
+
+@router.get(
+    "/statements/{statement_id}/pdf",
+    response_class=Response,
+    responses={200: {"content": {"application/pdf": {"schema": {"type": "string", "format": "binary"}}}}},
+)
+def download_statement_pdf(statement_id: uuid.UUID, user: CurrentUser, db: DbSession) -> Response:
+    """PDF du relevé : celui archivé à l'émission, ou un aperçu « BROUILLON » pour l'administrateur."""
+    statement = _visible_statement(db, user, statement_id)
+    name = statement.number or f"brouillon-{statement.id}"
+    return Response(
+        content=statement_pdf.pdf_for(db, statement),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{name}.pdf"'},
+    )

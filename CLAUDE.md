@@ -70,6 +70,7 @@ SunShare/
 │   │   ├── dashboard.py    # courbe du jour et chiffres du mois d'un utilisateur
 │   │   ├── money.py        # to_cents : arrondi au centime, une seule fois, sur le total
 │   │   ├── billing.py      # relevés mensuels : montants, brouillons, émission numérotée
+│   │   ├── statement_pdf.py # factures et relevés de reversement en PDF (reportlab)
 │   │   ├── enedis/         # client.py (interface du connecteur PMO), importer.py (import mensuel)
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
@@ -204,6 +205,11 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   `statement_counters` verrouillé AVANT la lecture des brouillons), tarifs figés, plus jamais modifié ;
   les participants ne voient que les relevés émis. Ne jamais émettre sur la base de dev pour tester
   (le compteur avancerait) : les tests le couvrent sur la base de test.
+- PDF (`statement_pdf.py`) : généré et **archivé en base à l'émission** (colonne `statements.pdf`,
+  chargée à la demande), puis toujours resservi tel quel ; brouillon rendu à la volée avec filigrane,
+  pour l'admin seulement. Rendu déterministe (`invariant=1`). Polices standard du PDF : pas de « − »
+  typographique (signe moins ASCII). Identité de la PMO et mention de TVA = réglages `PMO_*` ; tant
+  qu'ils manquent, « à compléter » s'imprime (aucune mention légale inventée).
 - Tableau de bord : répartitions Enedis prioritaires sur la période si elles existent, sinon
   simulation (`data_source` = `simulated` → l'app doit présenter les chiffres comme une estimation).
   Facteur CO2 : `settings.co2_kg_per_kwh` (0,052, hypothèse à confirmer).
@@ -268,7 +274,7 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 - [x] Backend : table `statements` (+ compteur de numérotation), calcul des brouillons du mois,
       émission, `/admin/billing/run|issue|statements`, `/me/statements`, `/statements/{id}` ;
       couverture 100 % (CI : `app.allocation` et `app.billing` ≥ 90 %)
-- [ ] Factures et relevés en PDF (PAY-03)
+- [x] Factures et relevés en PDF (PAY-03) : `GET /statements/{id}/pdf`, archivage à l'émission
 - [ ] App : historique et détail des relevés ; back-office : lancer, vérifier, émettre la facturation
 - [ ] Paiements (PAY-01, 02, 04, 05) : bloqués sans compte Mangopay / Stripe Connect
 - Plus tard : avoirs (correction d'un relevé émis), historique des tarifs (TAR-03), planification.

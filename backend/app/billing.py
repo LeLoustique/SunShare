@@ -30,6 +30,7 @@ from app.models import (
     StatementStatus,
 )
 from app.money import to_cents
+from app.statement_pdf import document_for, render
 from app.timesteps import PARIS, bounds, month_days
 
 NO_AMOUNT = Decimal("0.00")
@@ -213,5 +214,7 @@ def issue(db: Session, period: str) -> list[Statement]:
         statement.number = f"SS-{now.year}-{counter.last_number:06d}"
         statement.status = StatementStatus.issued
         statement.issued_at = now
+        # PDF archivé dans la même transaction : pas de relevé émis sans son document
+        statement.pdf = render(document_for(db, statement))
     db.commit()
     return drafts
