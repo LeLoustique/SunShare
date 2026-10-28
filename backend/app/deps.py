@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models import User
+from app.models import User, UserRole
 from app.security import decode_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
@@ -34,3 +34,12 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: DbSessio
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+def get_admin_user(user: CurrentUser) -> User:
+    if user.role is not UserRole.admin:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Réservé à l'administrateur de la PMO")
+    return user
+
+
+AdminUser = Annotated[User, Depends(get_admin_user)]

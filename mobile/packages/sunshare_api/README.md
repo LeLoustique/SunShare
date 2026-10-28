@@ -47,14 +47,16 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:sunshare_api/sunshare_api.dart';
 
 
-final api = SunshareApi().getAdressesApi();
-final String q = q_example; // String | 
+final api = SunshareApi().getAdminApi();
+final String loopId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final String memberId = 38400000-8cf0-11bd-b23e-10b96e4ef00d; // String | 
+final ApproveRequest approveRequest = ; // ApproveRequest | 
 
 try {
-    final response = await api.searchAddresses(q);
+    final response = await api.adminApproveMember(loopId, memberId, approveRequest);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AdressesApi->searchAddresses: $e\n");
+    print("Exception when calling AdminApi->adminApproveMember: $e\n");
 }
 
 ```
@@ -65,10 +67,21 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*AdminApi*](doc/AdminApi.md) | [**adminApproveMember**](doc/AdminApi.md#adminapprovemember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/approve | Admin Approve Member
+[*AdminApi*](doc/AdminApi.md) | [**adminCreateLoop**](doc/AdminApi.md#admincreateloop) | **POST** /api/v1/admin/loops | Admin Create Loop
+[*AdminApi*](doc/AdminApi.md) | [**adminListLoops**](doc/AdminApi.md#adminlistloops) | **GET** /api/v1/admin/loops | Admin List Loops
+[*AdminApi*](doc/AdminApi.md) | [**adminListMembers**](doc/AdminApi.md#adminlistmembers) | **GET** /api/v1/admin/loops/{loop_id}/members | Admin List Members
+[*AdminApi*](doc/AdminApi.md) | [**adminRejectMember**](doc/AdminApi.md#adminrejectmember) | **POST** /api/v1/admin/loops/{loop_id}/members/{member_id}/reject | Admin Reject Member
+[*AdminApi*](doc/AdminApi.md) | [**adminUpdateLoop**](doc/AdminApi.md#adminupdateloop) | **PATCH** /api/v1/admin/loops/{loop_id} | Admin Update Loop
 [*AdressesApi*](doc/AdressesApi.md) | [**searchAddresses**](doc/AdressesApi.md#searchaddresses) | **GET** /api/v1/addresses | Search Addresses
 [*AuthApi*](doc/AuthApi.md) | [**login**](doc/AuthApi.md#login) | **POST** /api/v1/auth/login | Login
 [*AuthApi*](doc/AuthApi.md) | [**refresh**](doc/AuthApi.md#refresh) | **POST** /api/v1/auth/refresh | Refresh
 [*AuthApi*](doc/AuthApi.md) | [**register**](doc/AuthApi.md#register) | **POST** /api/v1/auth/register | Register
+[*BouclesApi*](doc/BouclesApi.md) | [**cancelMembership**](doc/BouclesApi.md#cancelmembership) | **DELETE** /api/v1/me/memberships/{membership_id} | Cancel Membership
+[*BouclesApi*](doc/BouclesApi.md) | [**joinLoop**](doc/BouclesApi.md#joinloop) | **POST** /api/v1/loops/{loop_id}/join | Join Loop
+[*BouclesApi*](doc/BouclesApi.md) | [**listAvailableLoops**](doc/BouclesApi.md#listavailableloops) | **GET** /api/v1/loops/available | List Available Loops
+[*BouclesApi*](doc/BouclesApi.md) | [**listMyMemberships**](doc/BouclesApi.md#listmymemberships) | **GET** /api/v1/me/memberships | List My Memberships
+[*BouclesApi*](doc/BouclesApi.md) | [**readLoop**](doc/BouclesApi.md#readloop) | **GET** /api/v1/loops/{loop_id} | Read Loop
 [*CompteursApi*](doc/CompteursApi.md) | [**createMeter**](doc/CompteursApi.md#createmeter) | **POST** /api/v1/meters | Create Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**deleteMeter**](doc/CompteursApi.md#deletemeter) | **DELETE** /api/v1/meters/{meter_id} | Delete Meter
 [*CompteursApi*](doc/CompteursApi.md) | [**listMeters**](doc/CompteursApi.md#listmeters) | **GET** /api/v1/meters | List Meters
@@ -79,8 +92,21 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [AddressSuggestion](doc/AddressSuggestion.md)
+ - [AdminLoopOut](doc/AdminLoopOut.md)
+ - [AdminMemberOut](doc/AdminMemberOut.md)
+ - [AllocationMode](doc/AllocationMode.md)
+ - [ApproveRequest](doc/ApproveRequest.md)
+ - [AvailableLoop](doc/AvailableLoop.md)
  - [HTTPValidationError](doc/HTTPValidationError.md)
  - [HealthOut](doc/HealthOut.md)
+ - [JoinRequest](doc/JoinRequest.md)
+ - [LoopCreate](doc/LoopCreate.md)
+ - [LoopOut](doc/LoopOut.md)
+ - [LoopStats](doc/LoopStats.md)
+ - [LoopStatus](doc/LoopStatus.md)
+ - [LoopUpdate](doc/LoopUpdate.md)
+ - [MembershipOut](doc/MembershipOut.md)
+ - [MembershipStatus](doc/MembershipStatus.md)
  - [MeterCreate](doc/MeterCreate.md)
  - [MeterDirection](doc/MeterDirection.md)
  - [MeterOut](doc/MeterOut.md)

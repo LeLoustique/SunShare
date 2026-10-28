@@ -9,8 +9,10 @@ import 'package:sunshare_api/src/auth/api_key_auth.dart';
 import 'package:sunshare_api/src/auth/basic_auth.dart';
 import 'package:sunshare_api/src/auth/bearer_auth.dart';
 import 'package:sunshare_api/src/auth/oauth.dart';
+import 'package:sunshare_api/src/api/admin_api.dart';
 import 'package:sunshare_api/src/api/adresses_api.dart';
 import 'package:sunshare_api/src/api/auth_api.dart';
+import 'package:sunshare_api/src/api/boucles_api.dart';
 import 'package:sunshare_api/src/api/compteurs_api.dart';
 import 'package:sunshare_api/src/api/profil_api.dart';
 import 'package:sunshare_api/src/api/technique_api.dart';
@@ -74,6 +76,12 @@ class SunshareApi {
     }
   }
 
+  /// Get AdminApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  AdminApi getAdminApi() {
+    return AdminApi(dio, serializers);
+  }
+
   /// Get AdressesApi instance, base route and serializer can be overridden by a given but be careful,
   /// by doing that all interceptors will not be executed
   AdressesApi getAdressesApi() {
@@ -84,6 +92,12 @@ class SunshareApi {
   /// by doing that all interceptors will not be executed
   AuthApi getAuthApi() {
     return AuthApi(dio, serializers);
+  }
+
+  /// Get BouclesApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  BouclesApi getBouclesApi() {
+    return BouclesApi(dio, serializers);
   }
 
   /// Get CompteursApi instance, base route and serializer can be overridden by a given but be careful,

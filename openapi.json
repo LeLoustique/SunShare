@@ -325,6 +325,529 @@
         }
       }
     },
+    "/api/v1/loops/available": {
+      "get": {
+        "tags": [
+          "boucles"
+        ],
+        "summary": "List Available Loops",
+        "description": "Boucles ouvertes que les compteurs libres de l'utilisateur peuvent rejoindre.",
+        "operationId": "list_available_loops",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AvailableLoop"
+                  },
+                  "type": "array",
+                  "title": "Response List Available Loops"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/loops/{loop_id}/join": {
+      "post": {
+        "tags": [
+          "boucles"
+        ],
+        "summary": "Join Loop",
+        "description": "Demande d'adhésion d'un compteur ; validée ensuite par l'administrateur de la PMO.",
+        "operationId": "join_loop",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MembershipOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/loops/{loop_id}": {
+      "get": {
+        "tags": [
+          "boucles"
+        ],
+        "summary": "Read Loop",
+        "description": "Détail d'une boucle, réservé à ses membres (demande en cours comprise) et à l'administrateur.",
+        "operationId": "read_loop",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoopOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/memberships": {
+      "get": {
+        "tags": [
+          "boucles"
+        ],
+        "summary": "List My Memberships",
+        "description": "Demandes et participations de l'utilisateur, toutes boucles et tous statuts confondus.",
+        "operationId": "list_my_memberships",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MembershipOut"
+                  },
+                  "type": "array",
+                  "title": "Response List My Memberships"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/memberships/{membership_id}": {
+      "delete": {
+        "tags": [
+          "boucles"
+        ],
+        "summary": "Cancel Membership",
+        "description": "Annule une demande encore en attente (la sortie d'un membre actif viendra plus tard).",
+        "operationId": "cancel_membership",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "membership_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Membership Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/loops": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin List Loops",
+        "operationId": "admin_list_loops",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AdminLoopOut"
+                  },
+                  "type": "array",
+                  "title": "Response Admin List Loops"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Create Loop",
+        "operationId": "admin_create_loop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoopCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoopOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/loops/{loop_id}": {
+      "patch": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Update Loop",
+        "operationId": "admin_update_loop",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoopUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLoopOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/loops/{loop_id}/members": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin List Members",
+        "operationId": "admin_list_members",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AdminMemberOut"
+                  },
+                  "title": "Response Admin List Members"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/loops/{loop_id}/members/{member_id}/approve": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Approve Member",
+        "description": "Valide l'adhésion et fixe la date d'entrée dans l'opération.\n\nPas de nouveau contrôle du périmètre : une demande en attente y est déjà prise en compte.",
+        "operationId": "admin_approve_member",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMemberOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/loops/{loop_id}/members/{member_id}/reject": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Admin Reject Member",
+        "operationId": "admin_reject_member",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "loop_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Loop Id"
+            }
+          },
+          {
+            "name": "member_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Member Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMemberOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "tags": [
@@ -382,6 +905,269 @@
           "longitude"
         ],
         "title": "AddressSuggestion"
+      },
+      "AdminLoopOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "perimeter_km": {
+            "type": "number",
+            "maximum": 20.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Perimeter Km"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/LoopStatus"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/LoopStats"
+          },
+          "commission_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Commission Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "allocation_mode": {
+            "$ref": "#/components/schemas/AllocationMode"
+          },
+          "enedis_operation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enedis Operation Id"
+          },
+          "pending_count": {
+            "type": "integer",
+            "title": "Pending Count"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "perimeter_km",
+          "price_eur_kwh",
+          "status",
+          "stats",
+          "commission_eur_kwh",
+          "allocation_mode",
+          "enedis_operation_id",
+          "pending_count",
+          "created_at"
+        ],
+        "title": "AdminLoopOut"
+      },
+      "AdminMemberOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "loop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Loop Id"
+          },
+          "loop_name": {
+            "type": "string",
+            "title": "Loop Name"
+          },
+          "meter_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Meter Id"
+          },
+          "prm": {
+            "type": "string",
+            "title": "Prm"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MembershipStatus"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "joined_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Joined At"
+          },
+          "left_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left At"
+          },
+          "first_name": {
+            "type": "string",
+            "title": "First Name"
+          },
+          "last_name": {
+            "type": "string",
+            "title": "Last Name"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "peak_kw": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 1000.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Peak Kw"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "loop_id",
+          "loop_name",
+          "meter_id",
+          "prm",
+          "direction",
+          "status",
+          "requested_at",
+          "joined_at",
+          "left_at",
+          "first_name",
+          "last_name",
+          "email",
+          "address",
+          "peak_kw"
+        ],
+        "title": "AdminMemberOut"
+      },
+      "AllocationMode": {
+        "type": "string",
+        "enum": [
+          "static",
+          "dynamic_default",
+          "dynamic_custom"
+        ],
+        "title": "AllocationMode",
+        "description": "Clé de répartition transmise à Enedis (cahier des charges §8.2)."
+      },
+      "ApproveRequest": {
+        "properties": {
+          "joined_at": {
+            "type": "string",
+            "format": "date",
+            "title": "Joined At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "joined_at"
+        ],
+        "title": "ApproveRequest",
+        "description": "Date d'entrée dans l'opération, communiquée à Enedis."
+      },
+      "AvailableLoop": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "perimeter_km": {
+            "type": "number",
+            "maximum": 20.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Perimeter Km"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          },
+          "joinable_meter_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Joinable Meter Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "perimeter_km",
+          "price_eur_kwh",
+          "member_count",
+          "joinable_meter_ids"
+        ],
+        "title": "AvailableLoop"
       },
       "Body_login": {
         "properties": {
@@ -475,6 +1261,348 @@
           "extensions"
         ],
         "title": "HealthOut"
+      },
+      "JoinRequest": {
+        "properties": {
+          "meter_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Meter Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meter_id"
+        ],
+        "title": "JoinRequest"
+      },
+      "LoopCreate": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "perimeter_km": {
+            "type": "number",
+            "maximum": 20.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Perimeter Km",
+            "default": "2"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "commission_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Commission Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "allocation_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enedis_operation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enedis Operation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "price_eur_kwh",
+          "commission_eur_kwh"
+        ],
+        "title": "LoopCreate"
+      },
+      "LoopOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "perimeter_km": {
+            "type": "number",
+            "maximum": 20.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Perimeter Km"
+          },
+          "price_eur_kwh": {
+            "type": "string",
+            "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+            "title": "Price Eur Kwh",
+            "examples": [
+              "0.18"
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/LoopStatus"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/LoopStats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "perimeter_km",
+          "price_eur_kwh",
+          "status",
+          "stats"
+        ],
+        "title": "LoopOut"
+      },
+      "LoopStats": {
+        "properties": {
+          "member_count": {
+            "type": "integer",
+            "title": "Member Count"
+          },
+          "producer_count": {
+            "type": "integer",
+            "title": "Producer Count"
+          },
+          "consumer_count": {
+            "type": "integer",
+            "title": "Consumer Count"
+          },
+          "total_peak_kw": {
+            "type": "number",
+            "title": "Total Peak Kw"
+          },
+          "diameter_km": {
+            "type": "number",
+            "title": "Diameter Km"
+          }
+        },
+        "type": "object",
+        "required": [
+          "member_count",
+          "producer_count",
+          "consumer_count",
+          "total_peak_kw",
+          "diameter_km"
+        ],
+        "title": "LoopStats",
+        "description": "Chiffres agrégés : jamais d'information individuelle sur les autres membres."
+      },
+      "LoopStatus": {
+        "type": "string",
+        "enum": [
+          "open",
+          "closed"
+        ],
+        "title": "LoopStatus"
+      },
+      "LoopUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 100,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "perimeter_km": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 20.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Perimeter Km"
+          },
+          "price_eur_kwh": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+                "examples": [
+                  "0.18"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Eur Kwh"
+          },
+          "commission_eur_kwh": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9]+(\\.[0-9]{1,4})?$",
+                "examples": [
+                  "0.18"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Commission Eur Kwh"
+          },
+          "allocation_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AllocationMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LoopStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enedis_operation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enedis Operation Id"
+          }
+        },
+        "type": "object",
+        "title": "LoopUpdate",
+        "description": "Champs absents : inchangés."
+      },
+      "MembershipOut": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "loop_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Loop Id"
+          },
+          "loop_name": {
+            "type": "string",
+            "title": "Loop Name"
+          },
+          "meter_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Meter Id"
+          },
+          "prm": {
+            "type": "string",
+            "title": "Prm"
+          },
+          "direction": {
+            "$ref": "#/components/schemas/MeterDirection"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MembershipStatus"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Requested At"
+          },
+          "joined_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Joined At"
+          },
+          "left_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Left At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "loop_id",
+          "loop_name",
+          "meter_id",
+          "prm",
+          "direction",
+          "status",
+          "requested_at",
+          "joined_at",
+          "left_at"
+        ],
+        "title": "MembershipOut"
+      },
+      "MembershipStatus": {
+        "type": "string",
+        "enum": [
+          "pending",
+          "active",
+          "rejected",
+          "left"
+        ],
+        "title": "MembershipStatus"
       },
       "MeterCreate": {
         "properties": {

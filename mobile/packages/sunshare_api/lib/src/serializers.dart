@@ -15,8 +15,21 @@ import 'package:sunshare_api/src/date_serializer.dart';
 import 'package:sunshare_api/src/model/date.dart';
 
 import 'package:sunshare_api/src/model/address_suggestion.dart';
+import 'package:sunshare_api/src/model/admin_loop_out.dart';
+import 'package:sunshare_api/src/model/admin_member_out.dart';
+import 'package:sunshare_api/src/model/allocation_mode.dart';
+import 'package:sunshare_api/src/model/approve_request.dart';
+import 'package:sunshare_api/src/model/available_loop.dart';
 import 'package:sunshare_api/src/model/http_validation_error.dart';
 import 'package:sunshare_api/src/model/health_out.dart';
+import 'package:sunshare_api/src/model/join_request.dart';
+import 'package:sunshare_api/src/model/loop_create.dart';
+import 'package:sunshare_api/src/model/loop_out.dart';
+import 'package:sunshare_api/src/model/loop_stats.dart';
+import 'package:sunshare_api/src/model/loop_status.dart';
+import 'package:sunshare_api/src/model/loop_update.dart';
+import 'package:sunshare_api/src/model/membership_out.dart';
+import 'package:sunshare_api/src/model/membership_status.dart';
 import 'package:sunshare_api/src/model/meter_create.dart';
 import 'package:sunshare_api/src/model/meter_direction.dart';
 import 'package:sunshare_api/src/model/meter_out.dart';
@@ -32,8 +45,21 @@ part 'serializers.g.dart';
 
 @SerializersFor([
   AddressSuggestion,
+  AdminLoopOut,
+  AdminMemberOut,
+  AllocationMode,
+  ApproveRequest,
+  AvailableLoop,
   HTTPValidationError,
   HealthOut,
+  JoinRequest,
+  LoopCreate,
+  LoopOut,
+  LoopStats,
+  LoopStatus,
+  LoopUpdate,
+  MembershipOut,
+  MembershipStatus,
   MeterCreate,
   MeterDirection,
   MeterOut,
@@ -51,8 +77,24 @@ Serializers serializers = (_$serializers.toBuilder()
         () => ListBuilder<AddressSuggestion>(),
       )
       ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AdminMemberOut)]),
+        () => ListBuilder<AdminMemberOut>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AvailableLoop)]),
+        () => ListBuilder<AvailableLoop>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(AdminLoopOut)]),
+        () => ListBuilder<AdminLoopOut>(),
+      )
+      ..addBuilderFactory(
         const FullType(BuiltList, [FullType(MeterOut)]),
         () => ListBuilder<MeterOut>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(MembershipOut)]),
+        () => ListBuilder<MembershipOut>(),
       )
       ..add(const OneOfSerializer())
       ..add(const AnyOfSerializer())

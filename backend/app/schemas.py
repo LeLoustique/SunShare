@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated
 
@@ -14,7 +14,7 @@ from pydantic import (
     model_validator,
 )
 
-from app.models import MeterDirection, UserRole
+from app.models import AllocationMode, LoopStatus, MembershipStatus, MeterDirection, UserRole
 
 
 class UserCreate(BaseModel):
@@ -106,3 +106,117 @@ class AddressSuggestion(BaseModel):
     city: str
     latitude: float
     longitude: float
+
+
+# Tarifs en €/kWh : chaîne décimale exacte sur le réseau, jamais de flottant pour de l'argent
+EurPerKwh = Annotated[
+    Decimal,
+    Field(ge=0, lt=10, max_digits=6, decimal_places=4),
+    PlainSerializer(str, return_type=str, when_used="json"),
+    WithJsonSchema({"type": "string", "pattern": r"^[0-9]+(\.[0-9]{1,4})?$", "examples": ["0.18"]}),
+]
+
+# Périmètre d'une boucle : 2 km en zone urbaine, jusqu'à 10 ou 20 km sur dérogation
+PerimeterKm = Annotated[
+    Decimal,
+    Field(gt=0, le=20, decimal_places=2),
+    PlainSerializer(float, return_type=float, when_used="json"),
+    WithJsonSchema({"type": "number", "exclusiveMinimum": 0, "maximum": 20}),
+]
+
+
+class LoopCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    perimeter_km: PerimeterKm = Decimal(2)
+    price_eur_kwh: EurPerKwh
+    commission_eur_kwh: EurPerKwh
+    # Absent : clé dynamique par défaut (valeur par défaut de la base). Pas de défaut enum ici :
+    # le générateur dart-dio produit alors un code qui ne compile pas
+    allocation_mode: AllocationMode | None = None
+    enedis_operation_id: str | None = Field(default=None, max_length=50)
+
+    @model_validator(mode="after")
+    def commission_sous_le_tarif(self) -> "LoopCreate":
+        if self.commission_eur_kwh >= self.price_eur_kwh:
+            raise ValueError("La commission doit être inférieure au tarif")
+        return self
+
+
+class LoopUpdate(BaseModel):
+    """Champs absents : inchangés."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    perimeter_km: PerimeterKm | None = None
+    price_eur_kwh: EurPerKwh | None = None
+    commission_eur_kwh: EurPerKwh | None = None
+    allocation_mode: AllocationMode | None = None
+    status: LoopStatus | None = None
+    enedis_operation_id: str | None = Field(default=None, max_length=50)
+
+
+class LoopStats(BaseModel):
+    """Chiffres agrégés : jamais d'information individuelle sur les autres membres."""
+
+    member_count: int
+    producer_count: int
+    consumer_count: int
+    total_peak_kw: float
+    diameter_km: float
+
+
+class LoopOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    perimeter_km: PerimeterKm
+    price_eur_kwh: EurPerKwh
+    status: LoopStatus
+    stats: LoopStats
+
+
+class AdminLoopOut(LoopOut):
+    commission_eur_kwh: EurPerKwh
+    allocation_mode: AllocationMode
+    enedis_operation_id: str | None
+    pending_count: int
+    created_at: datetime
+
+
+class AvailableLoop(BaseModel):
+    id: uuid.UUID
+    name: str
+    perimeter_km: PerimeterKm
+    price_eur_kwh: EurPerKwh
+    member_count: int
+    # Compteurs de l'utilisateur qui peuvent rejoindre cette boucle sans dépasser le périmètre
+    joinable_meter_ids: list[uuid.UUID]
+
+
+class JoinRequest(BaseModel):
+    meter_id: uuid.UUID
+
+
+class MembershipOut(BaseModel):
+    id: uuid.UUID
+    loop_id: uuid.UUID
+    loop_name: str
+    meter_id: uuid.UUID
+    prm: str
+    direction: MeterDirection
+    status: MembershipStatus
+    requested_at: datetime
+    joined_at: date | None
+    left_at: date | None
+
+
+class AdminMemberOut(MembershipOut):
+    first_name: str
+    last_name: str
+    email: str
+    address: str
+    peak_kw: PeakKw | None
+
+
+class ApproveRequest(BaseModel):
+    """Date d'entrée dans l'opération, communiquée à Enedis."""
+
+    joined_at: date

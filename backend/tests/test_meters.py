@@ -1,67 +1,6 @@
-import uuid
-
 import pytest
-from fastapi.testclient import TestClient
 
-from app.geocoding import Address, GeocodingUnavailable, get_geocoder
-from app.main import app
-
-client = TestClient(app)
-PASSWORD = "MotDePasseSolide42"
-
-AMIENS = Address(
-    label="8 Boulevard du Port 80000 Amiens",
-    postcode="80000",
-    city="Amiens",
-    longitude=2.290084,
-    latitude=49.897442,
-    score=0.97,
-)
-
-
-class FakeGeocoder:
-    """Ne connaît qu'une adresse ; `available=False` simule une panne du service."""
-
-    available = True
-
-    def _check(self):
-        if not FakeGeocoder.available:
-            raise GeocodingUnavailable
-
-    def suggest(self, query):
-        self._check()
-        return [AMIENS] if "port" in query.lower() else []
-
-    def locate(self, label):
-        self._check()
-        return AMIENS if label == AMIENS.label else None
-
-
-@pytest.fixture(autouse=True)
-def fake_geocoder():
-    FakeGeocoder.available = True
-    app.dependency_overrides[get_geocoder] = FakeGeocoder
-    yield
-    app.dependency_overrides.pop(get_geocoder)
-
-
-def new_prm():
-    return str(uuid.uuid4().int)[:14]
-
-
-def user_headers(role="mixed"):
-    email = f"test-{uuid.uuid4().hex[:12]}@sunshare-test.fr"
-    client.post("/api/v1/auth/register", json={
-        "email": email,
-        "password": PASSWORD,
-        "first_name": "Test",
-        "last_name": "Compteur",
-        "role": role,
-    })
-    tokens = client.post(
-        "/api/v1/auth/login", data={"username": email, "password": PASSWORD}
-    ).json()
-    return {"Authorization": f"Bearer {tokens['access_token']}"}
+from tests.helpers import AMIENS, FakeGeocoder, client, new_prm, user_headers
 
 
 def consumption(**overrides):

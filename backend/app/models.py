@@ -1,18 +1,21 @@
 import enum
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from geoalchemy2 import Geography
 from sqlalchemy import (
     CheckConstraint,
+    Date,
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Numeric,
     String,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -31,6 +34,26 @@ class UserRole(str, enum.Enum):
 class MeterDirection(str, enum.Enum):
     consumption = "consumption"
     production = "production"
+
+
+class LoopStatus(str, enum.Enum):
+    open = "open"  # accepte les demandes d'adhésion
+    closed = "closed"
+
+
+class AllocationMode(str, enum.Enum):
+    """Clé de répartition transmise à Enedis (cahier des charges §8.2)."""
+
+    static = "static"
+    dynamic_default = "dynamic_default"
+    dynamic_custom = "dynamic_custom"
+
+
+class MembershipStatus(str, enum.Enum):
+    pending = "pending"  # demande en attente de validation par la PMO
+    active = "active"
+    rejected = "rejected"
+    left = "left"
 
 
 class User(Base):
@@ -66,3 +89,66 @@ class Meter(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     user: Mapped[User] = relationship(back_populates="meters")
+
+
+class Loop(Base):
+    """Boucle d'autoconsommation collective (une « opération » pour Enedis)."""
+
+    __tablename__ = "loops"
+    __table_args__ = (
+        CheckConstraint("perimeter_km > 0", name="ck_loops_perimeter_positive"),
+        CheckConstraint(
+            "commission_eur_kwh >= 0 AND commission_eur_kwh < price_eur_kwh",
+            name="ck_loops_commission_below_price",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    name: Mapped[str] = mapped_column(String(100))
+    # Distance maximale entre les deux sites les plus éloignés (un diamètre, pas un rayon)
+    perimeter_km: Mapped[Decimal] = mapped_column(Numeric(5, 2), server_default="2")
+    price_eur_kwh: Mapped[Decimal] = mapped_column(Numeric(6, 4))
+    commission_eur_kwh: Mapped[Decimal] = mapped_column(Numeric(6, 4))
+    allocation_mode: Mapped[AllocationMode] = mapped_column(
+        Enum(AllocationMode, name="allocation_mode"), server_default=AllocationMode.dynamic_default.value
+    )
+    status: Mapped[LoopStatus] = mapped_column(
+        Enum(LoopStatus, name="loop_status"), server_default=LoopStatus.open.value
+    )
+    enedis_operation_id: Mapped[str | None] = mapped_column(String(50))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    members: Mapped[list["LoopMember"]] = relationship(back_populates="loop")
+
+
+# Statuts qui engagent un compteur : ils comptent dans le périmètre et dans l'unicité
+ENGAGED_STATUSES = (MembershipStatus.pending, MembershipStatus.active)
+
+
+class LoopMember(Base):
+    __tablename__ = "loop_members"
+    __table_args__ = (
+        # Un point de livraison ne participe qu'à une seule opération à la fois
+        Index(
+            "uq_loop_members_engaged_meter",
+            "meter_id",
+            unique=True,
+            postgresql_where=text("status IN ('pending', 'active')"),
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    loop_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("loops.id"), index=True)
+    # Pas de suppression en cascade : l'historique de participation sert à la facturation
+    meter_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("meters.id"), index=True)
+    status: Mapped[MembershipStatus] = mapped_column(
+        Enum(MembershipStatus, name="membership_status"), server_default=MembershipStatus.pending.value
+    )
+    static_key: Mapped[Decimal | None] = mapped_column(Numeric(7, 6))
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    # Date d'entrée dans l'opération, fixée par la PMO à la validation
+    joined_at: Mapped[date | None] = mapped_column(Date)
+    left_at: Mapped[date | None] = mapped_column(Date)
+
+    loop: Mapped[Loop] = relationship(back_populates="members")
+    meter: Mapped[Meter] = relationship()

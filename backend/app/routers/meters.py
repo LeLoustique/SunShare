@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.deps import CurrentUser, DbSession
 from app.geocoding import GeocoderDep, GeocodingUnavailable
-from app.models import Meter, MeterDirection, UserRole
+from app.models import LoopMember, MembershipStatus, Meter, MeterDirection, UserRole
 from app.routers.addresses import GEOCODING_DOWN
 from app.schemas import MeterCreate, MeterOut
 
@@ -98,5 +98,15 @@ def delete_meter(meter_id: uuid.UUID, user: CurrentUser, db: DbSession) -> None:
     # 404 aussi pour le compteur d'un autre : on ne révèle pas son existence
     if meter is None or meter.user_id != user.id:
         raise METER_NOT_FOUND
+
+    # L'historique de participation sert à la facturation : seules les demandes refusées s'effacent
+    memberships = db.scalars(select(LoopMember).where(LoopMember.meter_id == meter.id)).all()
+    if any(m.status is not MembershipStatus.rejected for m in memberships):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Ce compteur participe ou a participé à une boucle : il ne peut pas être supprimé",
+        )
+    for membership in memberships:
+        db.delete(membership)
     db.delete(meter)
     db.commit()

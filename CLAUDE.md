@@ -59,11 +59,13 @@ SunShare/
 │   │   ├── models.py       # User, Meter (+ enums UserRole, MeterDirection)
 │   │   ├── schemas.py      # utilisateurs, jetons, compteurs (MeterCreate/Out), AddressSuggestion
 │   │   ├── geocoding.py    # Base Adresse Nationale (Géoplateforme IGN) ; dépendance get_geocoder
+│   │   ├── perimeter.py    # contrôle du périmètre (ST_Distance, marge de 50 m)
+│   │   ├── loop_service.py # statistiques et conversions partagées des boucles
 │   │   ├── security.py     # hachage, création / décodage des jetons
 │   │   ├── deps.py         # DbSession, get_current_user, CurrentUser
-│   │   └── routers/        # auth.py, me.py, meters.py (/meters), addresses.py (/addresses)
+│   │   └── routers/        # auth, me, meters, addresses, loops (/loops, /me/memberships), admin (/admin/loops)
 │   ├── migrations/         # Alembic (env.py utilise geoalchemy2.alembic_helpers)
-│   ├── scripts/export_openapi.py
+│   ├── scripts/            # export_openapi.py, promote_admin.py
 │   └── tests/
 └── mobile/                 # projet Flutter « sunshare » (org fr.sunshare)
     ├── lib/
@@ -90,6 +92,7 @@ ruff check .                            # lint
 pytest -v                               # tests (la base doit tourner)
 alembic revision --autogenerate -m "..."  # nouvelle migration : TOUJOURS relire le fichier avant upgrade
 alembic upgrade head
+python scripts/promote_admin.py e-mail  # donne le rôle admin (PMO) : il ne se choisit pas à l'inscription
 
 # Client Dart : à relancer après toute modification d'une route ou d'un schéma Pydantic
 ./scripts/gen_client.sh                 # (Docker requis) ; la CI échoue si openapi.json est périmé
@@ -135,7 +138,17 @@ Documentation interactive de l'API : http://localhost:8000/docs (bouton Authoriz
   serveur **re-géocode** le libellé (score ≥ 0,8, type `housenumber` ou `locality`) et ne fait jamais
   confiance à des coordonnées envoyées par le client (elles servent au contrôle du périmètre).
   Limite connue : un lieu-dit sans numéro typé `street` par la BAN est refusé.
-- Tests backend : surcharger `get_geocoder` (`app.dependency_overrides`), jamais d'appel réseau.
+- Tests backend : `tests/conftest.py` remplace le géocodeur par `FakeGeocoder` (aucun appel réseau) ;
+  `site(km)` fabrique une adresse à km vers l'est d'Amiens pour tester les distances.
+- Périmètre (`perimeter.py`, cahier des charges §8.1) : un site rejoint une boucle si sa distance au
+  site **engagé** (demande `pending` ou membre `active`) le plus éloigné ne dépasse pas
+  `perimeter_km − 50 m`. Verrou `FOR UPDATE` sur la boucle pendant l'adhésion. Un compteur n'est
+  engagé que dans une boucle à la fois (index unique partiel).
+- Tarifs (`EurPerKwh`) : `Decimal` en Python, `numeric(6,4)` en base, **chaîne** dans le JSON
+  (`"0.1800"`), donc `String` côté Dart. Les grandeurs physiques (kWc, km) sont des nombres JSON.
+- Les membres d'une boucle ne voient que des statistiques agrégées, jamais les autres membres.
+- Générateur dart-dio : pas de valeur par défaut de type enum dans un schéma d'entrée (le code
+  généré ne compile pas) ; rendre le champ optionnel et appliquer le défaut côté serveur.
 - Toute modification du schéma passe par une migration Alembic ; les tables PostGIS / TimescaleDB
   absentes des modèles sont ignorées par `include_object` dans `migrations/env.py`.
 - Chaque fonctionnalité arrive avec ses tests ; la CI doit rester verte.
@@ -155,7 +168,17 @@ app Flutter qui appelle `/health`, CI GitHub Actions.
 
 **Sprint 1 — terminé.**
 
-**Sprints suivants** : boucles et contrôle du périmètre (PostGIS) → courbes simulées et moteur de
-répartition → intégration Enedis (sandbox Data Connect) → facturation et paiements → pilote.
+**Sprint 2 — en cours** : boucles et contrôle du périmètre (exigences LOOP-01 à 04).
+- [x] Backend : tables `loops` / `loop_members`, `/loops/available`, `/loops/{id}/join` (409 hors
+      périmètre), `/loops/{id}`, `/me/memberships`, `/admin/loops` (création, modification,
+      membres, validation avec date d'entrée, refus) + tests
+- [ ] Mobile utilisateur : boucles disponibles, demande d'adhésion, écran « Ma boucle »
+- [ ] Back-office administrateur (Flutter web) : boucles, validation des adhésions
+- Reporté : consentement Enedis obligatoire avant l'adhésion (sprint Enedis), sortie d'un membre
+  avec préavis (LOOP-05, P2), carte des participants aux positions floues.
 
-**Plus tard** : vérification de l'e-mail, révocation des jetons, base de test séparée pour pytest.
+**Sprints suivants** : courbes simulées et moteur de répartition → intégration Enedis (sandbox Data
+Connect) → facturation et paiements → pilote.
+
+**Plus tard** : vérification de l'e-mail, révocation des jetons, base de test séparée pour pytest
+(les tests remplissent la base de dev : boucles « Boucle de test », comptes `@sunshare-test.fr`).
